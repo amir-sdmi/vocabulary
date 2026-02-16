@@ -1,0 +1,40 @@
+{
+  "name": "vocabulary",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vocabulary Telegram/Vercel automation service",
+  "license": "MIT",
+  "author": "AmirHossein Sedigh Daemi",
+  "type": "module",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .vercel",
+    "lint": "echo \"Add ESLint if needed\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amir-sdmi/vocabulary.git"
+  },
+  "bugs": {
+    "url": "https://github.com/amir-sdmi/vocabulary/issues"
+  },
+  "homepage": "https://github.com/amir-sdmi/vocabulary#readme",
+  "keywords": [
+    "vercel",
+    "serverless",
+    "telegram-bot",
+    "typescript",
+    "automation"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@vercel/node": "^5.0.0",
+    "typescript": "^5.6.3"
+  }
+}
