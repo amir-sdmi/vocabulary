@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "framework": null,
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node@5.0.0"
+    }
+  }
+}

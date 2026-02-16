@@ -10,11 +10,14 @@
     "node": ">=20.11"
   },
   "scripts": {
-    "dev": "vercel dev",
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "dev": "npm run typecheck",
+    "build": "tsc --noEmit",
+    "start": "npm run vercel:dev",
+    "vercel:dev": "npx vercel dev",
+    "vercel:build": "npx vercel build",
+    "deploy": "npx vercel --prod",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist .vercel",
+    "clean": "rm -rf .vercel",
     "lint": "echo \"Add ESLint if needed\""
   },
   "repository": {
