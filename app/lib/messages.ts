@@ -10,8 +10,8 @@ const BLOB_PATHNAME = "vocabulary";
 
 async function readFromBlob(): Promise<StoredMessage[]> {
   try {
-    const result = await get({ urlOrPathname: BLOB_PATHNAME, access: "private" });
-    if (!result?.stream) return [];
+    const result = await get(BLOB_PATHNAME, { access: "private" });
+    if (!result || result.statusCode !== 200 || !result.stream) return [];
     const raw = await new Response(result.stream).text();
     const data = JSON.parse(raw) as unknown;
     return Array.isArray(data) ? (data as StoredMessage[]) : [];

@@ -21,8 +21,8 @@ export function TelegramMessages() {
 
   if (messages.length === 0) {
     return (
-      <p className="text-amber-700/70 dark:text-amber-300/70 text-sm mt-2">
-        No messages yet. Send something to your Telegram bot to see it here.
+      <p className="text-amber-700/70 dark:text-amber-300/70 text-sm mt-4">
+        No vocabularies in the blob yet. Send a message to your Telegram bot to save it here.
       </p>
     );
   }
