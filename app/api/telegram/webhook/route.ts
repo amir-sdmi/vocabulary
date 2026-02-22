@@ -24,6 +24,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  addMessage(text);
+  await addMessage(text);
   return NextResponse.json({ ok: true });
 }
