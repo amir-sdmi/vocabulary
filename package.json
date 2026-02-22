@@ -1,47 +1,26 @@
 {
   "name": "vocabulary",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "Vocabulary Telegram/Vercel automation service",
-  "license": "MIT",
-  "author": "AmirHossein Sedigh Daemi",
-  "type": "module",
-  "engines": {
-    "node": ">=20.11"
-  },
   "scripts": {
-    "dev": "npm run typecheck",
-    "build": "tsc --noEmit",
-    "start": "npm run vercel:dev",
-    "vercel:dev": "npx vercel dev",
-    "vercel:build": "npx vercel build",
-    "deploy": "npx vercel --prod",
-    "typecheck": "tsc --noEmit",
-    "clean": "rm -rf .vercel",
-    "lint": "echo \"Add ESLint if needed\""
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/amir-sdmi/vocabulary.git"
-  },
-  "bugs": {
-    "url": "https://github.com/amir-sdmi/vocabulary/issues"
-  },
-  "homepage": "https://github.com/amir-sdmi/vocabulary#readme",
-  "keywords": [
-    "vercel",
-    "serverless",
-    "telegram-bot",
-    "typescript",
-    "automation"
-  ],
   "dependencies": {
-    "grammy": "^1.34.0",
-    "firebase-admin": "^13.0.0"
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "@vercel/node": "^5.0.0",
-    "typescript": "^5.6.3"
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

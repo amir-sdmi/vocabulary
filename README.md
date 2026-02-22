@@ -1,46 +1,36 @@
-# vocabulary
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Telegram bot backend (Vercel serverless). Sends a word or phrase to the bot → it’s saved to Firebase Firestore.
+## Getting Started
 
-## How it works
+First, run the development server:
 
-1. **You** send a text message to the bot in Telegram (e.g. `hello` or `hello | a greeting`).
-2. **Telegram** sends a `POST` to your deployed URL: `https://<your-domain>/api/webhook` with the message (webhook must be set once).
-3. **Webhook** ([api/webhook.ts](api/webhook.ts)) receives the request, checks optional secret, then hands the body to grammY.
-4. **grammY** runs the handler for `message:text`: the text is parsed by [lib/parseVocabulary.ts](lib/parseVocabulary.ts) (split by `|` or `,`, or one piece), then [lib/firestore.ts](lib/firestore.ts) writes one document to the Firestore collection **vocabulary** (collection is created on first write; no setup in Firebase).
-5. **Bot** replies “Saved.” in Telegram.
-
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
-User → Telegram → POST /api/webhook → parse text → Firestore (vocabulary) → reply "Saved."
-```
 
-## Scripts
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-- `npm run dev` — TypeScript check for local development
-- `npm run vercel:dev` — run local Vercel serverless dev
-- `npm run build` — TypeScript type-check
-- `npm run vercel:build` — Vercel production build locally
-- `npm run deploy` — deploy to Vercel production
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## API
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-- `POST /api/webhook` — Telegram webhook; receives updates and saves vocabulary to Firestore.
+## Learn More
 
-## Env (Vercel)
+To learn more about Next.js, take a look at the following resources:
 
-- `BOT_TOKEN` — Telegram bot token (BotFather).
-- `FIREBASE_SERVICE_ACCOUNT_JSON` — Firebase service account key (full JSON string).
-- `BOT_WEBHOOK_SECRET` — Optional; if set, webhook URL must include `?secret=<value>`.
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## Firebase
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-1. Create a project in [Firebase Console](https://console.firebase.google.com), enable **Firestore**.
-2. Project Settings → Service accounts → Generate new private key → paste JSON into `FIREBASE_SERVICE_ACCOUNT_JSON`.
+## Deploy on Vercel
 
-## First-time Vercel Setup
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-1. `npx vercel login`
-2. `npx vercel pull --yes`
-3. Set env vars in Vercel dashboard (or `.env` for `npm run vercel:dev`).
-4. Deploy, then set Telegram webhook: `https://api.telegram.org/bot<BOT_TOKEN>/setWebhook?url=https://<your-domain>/api/webhook`
-5. `npm run vercel:dev` for local testing.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
