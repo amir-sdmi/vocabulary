@@ -15,9 +15,30 @@ bot.on("message:text", async (ctx) => {
 const handleUpdate = webhookCallback(bot, "https");
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (process.env.BOT_WEBHOOK_SECRET && req.query?.secret !== process.env.BOT_WEBHOOK_SECRET) {
+  const secret = process.env.BOT_WEBHOOK_SECRET;
+  if (secret && req.query?.secret !== secret) {
     return res.status(401).end("Unauthorized");
   }
+
+  if (req.method === "GET") {
+    const base = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "https://YOUR_VERCEL_DOMAIN";
+    const webhookPath = secret ? "/api/webhook?secret=YOUR_SECRET" : "/api/webhook";
+    const webhookUrl = base + webhookPath;
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    return res.status(200).end(
+      "Bot webhook endpoint.\n\n" +
+        "1. Connect Telegram to this app. Open in browser (replace BOT_TOKEN):\n" +
+        "   https://api.telegram.org/botBOT_TOKEN/setWebhook?url=" +
+        encodeURIComponent(webhookUrl) +
+        "\n   " +
+        (secret ? "Replace YOUR_SECRET with your BOT_WEBHOOK_SECRET value.\n   " : "") +
+        "\n2. Check: https://api.telegram.org/botBOT_TOKEN/getWebhookInfo\n   Should show your url.\n\n" +
+        "3. Send a message to your bot."
+    );
+  }
+
   if (req.method !== "POST") {
     return res.status(405).end("Method Not Allowed");
   }
