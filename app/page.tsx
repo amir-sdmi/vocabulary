@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TelegramMessages } from "./components/TelegramMessages";
 
 export default function Home() {
   return (
@@ -23,6 +24,13 @@ export default function Home() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
+        <section className="mb-16">
+          <h2 className="text-xl font-semibold text-amber-900 dark:text-amber-100">
+            From Telegram
+          </h2>
+          <TelegramMessages />
+        </section>
+
         <section className="text-center">
           <h1 className="text-4xl font-bold tracking-tight text-amber-950 dark:text-amber-50 sm:text-5xl">
             Build your vocabulary, one word at a time

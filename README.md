@@ -29,6 +29,23 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Telegram bot
+
+Messages sent to your bot appear on the home page.
+
+1. Create a bot with [@BotFather](https://t.me/BotFather) and get the bot token.
+2. Set the webhook (use your deployed URL or ngrok for local):
+   ```bash
+   curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://YOUR_DOMAIN/api/telegram/webhook"
+   ```
+   Optional secret (set the same value in `TELEGRAM_WEBHOOK_SECRET` env and in the URL):
+   ```bash
+   curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://YOUR_DOMAIN/api/telegram/webhook&secret_token=your-secret"
+   ```
+3. Send a message to your bot; it should show up under "From Telegram" on the home page (refreshes every 5 seconds).
+
+**Note:** Messages are stored in memory and are lost on restart. For production, add persistent storage (e.g. Vercel KV or a database).
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
