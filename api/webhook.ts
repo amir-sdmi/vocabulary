@@ -25,9 +25,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (secret) {
     const querySecret = typeof req.query?.secret === "string" ? req.query.secret : null;
     if (querySecret !== secret) {
+      console.error("Webhook secret mismatch: request has no ?secret= or wrong value");
       res.status(401).end("Unauthorized");
       return;
     }
+  }
+
+  if (req.method === "GET") {
+    res.setHeader("Content-Type", "text/plain");
+    res.status(200).end(
+      "Vocabulary webhook is live. Telegram sends POST here.\n" +
+        (secret
+          ? "You use BOT_WEBHOOK_SECRET: set webhook URL to .../api/webhook?secret=YOUR_SECRET"
+          : "Set webhook: https://api.telegram.org/bot<TOKEN>/setWebhook?url=<this-full-url>")
+    );
+    return;
   }
 
   if (req.method !== "POST") {
@@ -38,7 +50,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     await handleUpdate(req, res);
   } catch (err) {
-    console.error(err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Webhook error:", msg, err);
     if (!res.headersSent) res.status(500).end("Internal Server Error");
   }
 }

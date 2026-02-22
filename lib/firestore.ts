@@ -15,6 +15,7 @@ export async function saveVocabularyEntry(parts: string[]): Promise<void> {
   const word = parts[0] ?? "";
   const definition = parts.slice(1).join(" ").trim() || undefined;
   const db = getFirestore();
+  // Collection "vocabulary" is created automatically on first .add()
   await db.collection("vocabulary").add({
     word,
     ...(definition !== undefined && { definition }),
