@@ -28,8 +28,10 @@ export async function addMessage(text: string): Promise<StoredMessage> {
   };
   const list = await readFromBlob();
   const updated = [...list, msg];
-  await put(BLOB_PATHNAME, JSON.stringify(updated), {
+  const body = JSON.stringify(updated);
+  await put(BLOB_PATHNAME, body, {
     access: "private",
+    contentType: "application/json",
     allowOverwrite: true,
   });
   return msg;
