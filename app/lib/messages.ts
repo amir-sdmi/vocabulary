@@ -1,5 +1,4 @@
-import { readFile, writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { get, put } from "@vercel/blob";
 
 export type StoredMessage = {
   id: string;
@@ -7,26 +6,17 @@ export type StoredMessage = {
   at: number;
 };
 
-const FILE_PATH = join(process.cwd(), "data", "messages.json");
-const memory: StoredMessage[] = [];
+const BLOB_PATHNAME = "vocabulary";
 
-async function readFileSafe(): Promise<StoredMessage[]> {
+async function readFromBlob(): Promise<StoredMessage[]> {
   try {
-    const raw = await readFile(FILE_PATH, "utf-8");
-    const data = JSON.parse(raw) as StoredMessage[];
-    return Array.isArray(data) ? data : [];
+    const result = await get({ urlOrPathname: BLOB_PATHNAME, access: "private" });
+    if (!result?.stream) return [];
+    const raw = await new Response(result.stream).text();
+    const data = JSON.parse(raw) as unknown;
+    return Array.isArray(data) ? (data as StoredMessage[]) : [];
   } catch {
     return [];
-  }
-}
-
-async function writeFileSafe(messages: StoredMessage[]): Promise<boolean> {
-  try {
-    await mkdir(join(process.cwd(), "data"), { recursive: true });
-    await writeFile(FILE_PATH, JSON.stringify(messages, null, 2), "utf-8");
-    return true;
-  } catch {
-    return false;
   }
 }
 
@@ -36,19 +26,16 @@ export async function addMessage(text: string): Promise<StoredMessage> {
     text,
     at: Date.now(),
   };
-  memory.push(msg);
-  const fromFile = await readFileSafe();
-  const combined = [...fromFile, ...memory];
-  const written = await writeFileSafe(combined);
-  if (!written) {
-    return msg;
-  }
-  memory.length = 0;
+  const list = await readFromBlob();
+  const updated = [...list, msg];
+  await put(BLOB_PATHNAME, JSON.stringify(updated), {
+    access: "private",
+    allowOverwrite: true,
+  });
   return msg;
 }
 
 export async function getMessages(): Promise<StoredMessage[]> {
-  const fromFile = await readFileSafe();
-  const all = [...fromFile, ...memory];
-  return [...all].reverse();
+  const list = await readFromBlob();
+  return [...list].reverse();
 }

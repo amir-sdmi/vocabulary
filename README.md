@@ -16,7 +16,7 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Environment variables:** For local development, put your secrets in `.env.local`. Next.js loads it automatically (and does not commit it). Copy from `.env.example` which variables are needed.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
@@ -44,7 +44,7 @@ Messages sent to your bot appear on the home page.
    ```
 3. Send a message to your bot; it should show up under "From Telegram" on the home page (refreshes every 5 seconds).
 
-**Note:** Messages are stored in memory and are lost on restart. For production, add persistent storage (e.g. Vercel KV or a database).
+**Storage:** Vocabularies are stored in [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) under the key `vocabulary`. Create a Blob store in your Vercel project (Storage tab), then set `BLOB_READ_WRITE_TOKEN` in Vercel. For local dev, add the same variable to `.env.local`.
 
 ## Deploy on Vercel
 
