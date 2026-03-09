@@ -1,57 +1,91 @@
 import Link from "next/link";
-import { TelegramMessages } from "./components/TelegramMessages";
+import { VocabularyWorkspace } from "./components/VocabularyWorkspace";
+import { auth } from "@/auth";
+import { SignInButton, SignOutButton } from "./components/AuthButtons";
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
+  const userEmail = session?.user?.email;
+
   return (
-    <div className="min-h-screen bg-amber-50/80 dark:bg-stone-950">
-      <header className="border-b border-amber-200/60 dark:border-amber-900/40 bg-white/70 dark:bg-stone-900/70 backdrop-blur-sm sticky top-0 z-10">
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4 sm:px-6">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dff8ea_0%,#f8fbf9_45%,#fff8ea_100%)]">
+      <header className="sticky top-0 z-10 border-b border-emerald-900/10 bg-white/80 backdrop-blur-sm">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link
             href="/"
-            className="text-lg font-semibold tracking-tight text-amber-900 dark:text-amber-100"
+            className="text-lg font-semibold tracking-tight text-emerald-950"
           >
-            Vocabulary Notebook
+            LexiCoach
           </Link>
-          <nav className="flex gap-6 text-sm font-medium text-amber-800/90 dark:text-amber-200/90">
-            <Link href="#about" className="hover:text-amber-700 dark:hover:text-amber-100">
+          <nav className="flex gap-6 text-sm font-medium text-emerald-900/90">
+            <Link href="#about" className="hover:text-emerald-700">
               About
             </Link>
-            <Link href="#start" className="hover:text-amber-700 dark:hover:text-amber-100">
+            <Link href="#start" className="hover:text-emerald-700">
               Get started
             </Link>
+            {userEmail ? <SignOutButton /> : null}
           </nav>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-        <section>
-          <h1 className="text-2xl font-bold text-amber-900 dark:text-amber-100 sm:text-3xl">
-            Your vocabularies
-          </h1>
-          <p className="mt-1 text-sm text-amber-700/80 dark:text-amber-300/80">
-            All messages saved in the notebook (from Telegram). Refreshes every 5 seconds.
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+        <section className="relative overflow-hidden rounded-3xl border border-emerald-900/10 bg-white/80 p-6 shadow-sm sm:p-10">
+          <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-emerald-200/40 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 left-10 h-56 w-56 rounded-full bg-amber-200/30 blur-3xl" />
+          <p className="inline-flex rounded-full border border-emerald-900/10 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-900">
+            Your Personal Language Coach
           </p>
-          <TelegramMessages />
+          <h1 className="mt-4 text-3xl font-bold tracking-tight text-emerald-950 sm:text-5xl">
+            Personal Vocabulary Dictionary
+          </h1>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-emerald-900/75 sm:text-base">
+            A real-world vocabulary workspace: collect words, keep entries clean, edit quickly,
+            and export your full dictionary whenever you need.
+          </p>
+          {userEmail ? (
+            <>
+              <p className="mt-2 text-xs text-emerald-900/65">Signed in as {userEmail}</p>
+              <div className="mt-6">
+                <VocabularyWorkspace />
+              </div>
+            </>
+          ) : (
+            <div className="mt-8 rounded-2xl border border-emerald-900/15 bg-white/90 p-8 text-center shadow-sm">
+              <h2 className="text-xl font-semibold text-emerald-950">Sign in to continue</h2>
+              <p className="mt-2 text-sm text-emerald-900/75">
+                Multi-user mode is enabled. Each account sees only its own vocabulary list.
+              </p>
+              <div className="mt-5 flex justify-center">
+                <SignInButton />
+              </div>
+            </div>
+          )}
         </section>
 
         <section id="about" className="mt-16 scroll-mt-24">
-          <h2 className="text-xl font-semibold text-amber-900 dark:text-amber-100">
-            About
-          </h2>
-          <p className="mt-3 text-amber-800/80 dark:text-amber-200/80 leading-relaxed">
-            Vocabulary Notebook helps you keep all your new words in one place. Send words to your Telegram bot and they appear here, stored in Vercel Blob.
+          <h2 className="text-xl font-semibold text-emerald-950">About</h2>
+          <p className="mt-3 leading-relaxed text-emerald-900/80">
+            This app is built for active language learning. You can keep vocabulary cards updated,
+            mark trouble words, and use exports for backup or moving to other tools.
           </p>
         </section>
 
         <section id="start" className="mt-16 scroll-mt-24">
-          <h2 className="text-xl font-semibold text-amber-900 dark:text-amber-100">
-            Get started
-          </h2>
-          <p className="mt-3 text-amber-800/80 dark:text-amber-200/80 leading-relaxed">
-            Set the Telegram webhook to your deployed URL and send messages to your bot; they will show up above.
+          <h2 className="text-xl font-semibold text-emerald-950">Get started</h2>
+          <p className="mt-3 leading-relaxed text-emerald-900/80">
+            Send Telegram messages like <code>add: take over | I took over the project.</code>
+            and the word card is created automatically in your dictionary.
           </p>
         </section>
       </main>
+
+      <footer className="border-t border-emerald-900/10 bg-white/70">
+        <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 text-xs text-emerald-900/70 sm:px-6">
+          <p>LexiCoach • Personal vocabulary system</p>
+          <p>Multi-user secure workspace with Google sign-in</p>
+        </div>
+      </footer>
     </div>
   );
 }

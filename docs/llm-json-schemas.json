@@ -1,0 +1,374 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vocabulary.local/schemas/llm-contracts.json",
+  "title": "Vocabulary Coach LLM Contracts",
+  "type": "object",
+  "required": [
+    "vocab_card_generator",
+    "sentence_evaluator_batch"
+  ],
+  "properties": {
+    "vocab_card_generator": {
+      "$ref": "#/$defs/VocabCardGeneratorResponseSchema"
+    },
+    "sentence_evaluator_batch": {
+      "$ref": "#/$defs/SentenceEvaluatorBatchResponseSchema"
+    }
+  },
+  "$defs": {
+    "Tag": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "Pos": {
+      "type": "string",
+      "enum": [
+        "noun",
+        "verb",
+        "adjective",
+        "adverb",
+        "phrasal_verb",
+        "idiom",
+        "expression",
+        "other"
+      ]
+    },
+    "LearningStatus": {
+      "type": "string",
+      "enum": [
+        "new",
+        "learning",
+        "known",
+        "trouble"
+      ]
+    },
+    "ErrorType": {
+      "type": "string",
+      "enum": [
+        "grammar",
+        "word_choice",
+        "collocation",
+        "meaning_mismatch",
+        "fluency",
+        "spelling"
+      ]
+    },
+    "VocabCardGeneratorInputSchema": {
+      "type": "object",
+      "required": [
+        "term",
+        "user_sentence",
+        "level",
+        "language"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "term": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "user_sentence": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "A1",
+            "A2",
+            "B1",
+            "B2",
+            "C1",
+            "C2"
+          ]
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "en-fa"
+          ]
+        }
+      }
+    },
+    "VocabCardGeneratorResponseSchema": {
+      "type": "object",
+      "required": [
+        "term",
+        "lemma",
+        "pos",
+        "definition_easy_en",
+        "meaning_fa",
+        "user_example",
+        "ai_examples",
+        "collocations",
+        "synonyms",
+        "antonyms",
+        "tags",
+        "status",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "term": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "lemma": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "pos": {
+          "$ref": "#/$defs/Pos"
+        },
+        "definition_easy_en": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 240
+        },
+        "meaning_fa": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "user_example": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "ai_examples": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 280
+          }
+        },
+        "collocations": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 6,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 60
+          }
+        },
+        "synonyms": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 40
+          }
+        },
+        "antonyms": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 40
+          }
+        },
+        "tags": {
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/Tag"
+          }
+        },
+        "status": {
+          "$ref": "#/$defs/LearningStatus"
+        },
+        "image_hint": {
+          "type": "object",
+          "required": [
+            "should_add_image",
+            "reason"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "should_add_image": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 140
+            }
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "SentenceEvaluatorBatchInputSchema": {
+      "type": "object",
+      "required": [
+        "vocab_card",
+        "sentences"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "vocab_card": {
+          "type": "object",
+          "required": [
+            "term",
+            "lemma",
+            "pos",
+            "definition_easy_en",
+            "meaning_fa",
+            "collocations"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "term": {
+              "type": "string"
+            },
+            "lemma": {
+              "type": "string"
+            },
+            "pos": {
+              "$ref": "#/$defs/Pos"
+            },
+            "definition_easy_en": {
+              "type": "string"
+            },
+            "meaning_fa": {
+              "type": "string"
+            },
+            "collocations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "sentences": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        }
+      }
+    },
+    "SentenceFeedbackItem": {
+      "type": "object",
+      "required": [
+        "original",
+        "score",
+        "pass",
+        "error_types",
+        "fixed_sentence",
+        "explanation_en",
+        "explanation_fa"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "original": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "pass": {
+          "type": "boolean"
+        },
+        "error_types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ErrorType"
+          }
+        },
+        "fixed_sentence": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "explanation_en": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 240
+        },
+        "explanation_fa": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 240
+        }
+      }
+    },
+    "SentenceEvaluatorBatchResponseSchema": {
+      "type": "object",
+      "required": [
+        "term",
+        "items",
+        "score_avg",
+        "pass_fail",
+        "recommended_status",
+        "reask_in_hours",
+        "summary_en",
+        "summary_fa"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "term": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/SentenceFeedbackItem"
+          }
+        },
+        "score_avg": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "pass_fail": {
+          "type": "boolean"
+        },
+        "recommended_status": {
+          "$ref": "#/$defs/LearningStatus"
+        },
+        "reask_in_hours": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 72
+        },
+        "summary_en": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 180
+        },
+        "summary_fa": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 180
+        }
+      }
+    }
+  }
+}

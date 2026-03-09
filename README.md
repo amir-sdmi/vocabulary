@@ -2,6 +2,89 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Create local env file:
+   ```bash
+   cp .env.example .env.local
+   ```
+3. Fill credentials in `.env.local`:
+   - `BLOB_READ_WRITE_TOKEN`
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+   - `NEXTAUTH_SECRET`
+   - `NEXTAUTH_URL` (for local: `http://localhost:3000`)
+4. Run:
+   ```bash
+   npm run dev
+   ```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Auth + Multi-user
+
+- Login is Google-only (NextAuth).
+- Every API call is user-scoped.
+- Each user only sees their own vocabulary records.
+- User keys are separated in Blob by `web:<email>`.
+
+## Learning Coach Features
+
+- Daily guided review session (10 words)
+- Trouble-only review and quick 5-minute review
+- Tag-based review shortcut
+- Production-first tasks per word:
+  - Fill-gap
+  - Rewrite
+  - Free sentence
+- Automatic scoring + correction feedback
+- SRS scheduling with due date, interval, ease, lapses, streak
+- Mistake notebook (top repeated error categories with tips)
+- Progress metrics (retained/forgotten/usable/reviews7d/avg score)
+
+## Telegram Account Linking
+
+1. Sign in on web app.
+2. In **Daily Coach**, click **Generate link code**.
+3. Send `/link CODE` to your Telegram bot.
+4. Telegram vocabulary is migrated into your web account.
+
+## Telegram Ingestion
+
+- Telegram words are stored under a separate user namespace: `telegram:<telegram_user_id>`.
+- Web login users and Telegram users are isolated by default.
+- Bot replies (`Saved...`, `/link` status) require `TELEGRAM_BOT_TOKEN`.
+
+Set webhook:
+```bash
+curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://YOUR_DOMAIN/api/telegram/webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>"
+```
+
+## Export
+
+- CSV: `/api/vocab/export?format=csv`
+- JSON: `/api/vocab/export?format=json`
+- Anki CSV: `/api/vocab/export?format=anki`
+- Weekly summary text report: `/api/vocab/export?format=weekly`
+
+Exports require login and only include the signed-in user’s vocabularies.
+
+## New API Endpoints
+
+- `GET /api/review/session?mode=daily|trouble|quick|tag&tag=work`
+- `POST /api/review/answer`
+- `GET /api/stats`
+- `GET /api/mistakes`
+- `POST /api/link/start`
+
+## Legacy notes
+
+The previous single-user blob key was `vocabulary`. Current app storage is per-user and uses `vocabulary-db-v1/<user>.json`.
+
+## Default Next.js Docs
+
 First, run the development server:
 
 ```bash
