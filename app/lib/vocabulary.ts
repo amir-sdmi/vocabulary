@@ -11,6 +11,7 @@ import {
   ImportSource,
   VocabEntry,
 } from "@/app/features/vocabulary/types";
+import { TelegramExtractedEntry } from "@/app/lib/telegram-intake";
 import * as importsRepo from "@/app/lib/repositories/imports-repo";
 import * as vocabRepo from "@/app/lib/repositories/vocab-repo";
 
@@ -122,6 +123,56 @@ export async function createVocabularyFromTelegramText(
   text: string,
 ): Promise<VocabEntry | null> {
   return vocabRepo.createFromText(userId, text);
+}
+
+function mergeList(current: string[], incoming: string[]): string[] {
+  return Array.from(new Set([...current, ...incoming].map((x) => x.trim()).filter(Boolean)));
+}
+
+export async function saveTelegramExtractedEntry(
+  userId: string,
+  extracted: TelegramExtractedEntry,
+): Promise<{ entry: VocabEntry; action: "created" | "updated" }> {
+  const list = await getVocabularies(userId);
+  const normalizedTerm = extracted.term.trim().toLowerCase();
+  const existing = list.find((item) => item.term.trim().toLowerCase() === normalizedTerm);
+  if (!existing) {
+    const created = await createVocabulary(userId, {
+      term: extracted.term,
+      sentence: extracted.sentence,
+      meaning: extracted.meaning,
+      tags: extracted.tags,
+      source: "telegram",
+    });
+    const updated = await updateVocabulary(userId, created.id, {
+      collocations: extracted.collocations,
+      synonyms: extracted.synonyms,
+      antonyms: extracted.antonyms,
+      wordFamily: extracted.wordFamily,
+      difficultyScore: Math.round((1 - extracted.confidence) * 100),
+      entryType: extracted.term.includes(" ") ? "phrase" : "word",
+    });
+    return { entry: updated ?? created, action: "created" };
+  }
+
+  const updated = await updateVocabulary(userId, existing.id, {
+    definitionEasyEn: extracted.meaning || existing.definitionEasyEn,
+    userExample: extracted.sentence || existing.userExample,
+    tags: mergeList(existing.tags, extracted.tags),
+    collocations: mergeList(existing.collocations, extracted.collocations),
+    synonyms: mergeList(existing.synonyms, extracted.synonyms),
+    antonyms: mergeList(existing.antonyms, extracted.antonyms),
+    wordFamily: {
+      noun: extracted.wordFamily?.noun || existing.wordFamily.noun,
+      verb: extracted.wordFamily?.verb || existing.wordFamily.verb,
+      adjective: extracted.wordFamily?.adjective || existing.wordFamily.adjective,
+      adverb: extracted.wordFamily?.adverb || existing.wordFamily.adverb,
+    },
+    difficultyScore:
+      extracted.confidence > 0 ? Math.round((1 - extracted.confidence) * 100) : existing.difficultyScore,
+    entryType: extracted.term.includes(" ") ? "phrase" : existing.entryType,
+  });
+  return { entry: updated ?? existing, action: "updated" };
 }
 
 export async function updateVocabulary(

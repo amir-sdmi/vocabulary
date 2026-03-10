@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createVocabularyFromTelegramText } from "@/app/lib/vocabulary";
+import { saveTelegramExtractedEntry } from "@/app/lib/vocabulary";
 import { getTelegramUserId } from "@/app/lib/auth-user";
 import { consumeLinkCode, resolveTelegramOwnerUserId } from "@/app/lib/account-link";
-import { parseAddCommand, parseNaturalAddText } from "@/app/features/vocabulary/helpers";
+import { extractTelegramEntry } from "@/app/lib/telegram-intake";
 
 const TELEGRAM_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -85,16 +85,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: result.ok, message: result.message });
   }
 
+  if (text.startsWith("/") && !text.toLowerCase().startsWith("/link")) {
+    const chatId = update.message?.chat?.id;
+    if (chatId) {
+      await sendTelegramReply(
+        chatId,
+        'Send any word/phrase/sentence and I will save it. You can also use: add: term | meaning | tags | example',
+      );
+    }
+    return NextResponse.json({ ok: true });
+  }
+
   const ownerId = await resolveTelegramOwnerUserId(telegramUserId);
-  const parsed = parseAddCommand(text) ?? parseNaturalAddText(text);
-  const created = await createVocabularyFromTelegramText(ownerId, text);
+  const extracted = await extractTelegramEntry(text);
+  const result = await saveTelegramExtractedEntry(ownerId, extracted);
   const chatId = update.message?.chat?.id;
-  if (chatId && created) {
+  if (chatId) {
     const normalized = [
-      `Saved: ${created.term}`,
-      `Meaning: ${created.definitionEasyEn || parsed.meaning || "n/a"}`,
-      `Tags: ${(created.tags.length > 0 ? created.tags : parsed.tags ?? []).join(", ") || "n/a"}`,
-      `Example: ${created.userExample || parsed.sentence || "n/a"}`,
+      `${result.action === "created" ? "Saved" : "Updated"}: ${result.entry.term}`,
+      `Meaning: ${result.entry.definitionEasyEn || extracted.meaning || "n/a"}`,
+      `Tags: ${result.entry.tags.join(", ") || "n/a"}`,
+      `Example: ${result.entry.userExample || extracted.sentence || "n/a"}`,
+      `Parser: ${extracted.source} (${Math.round(extracted.confidence * 100)}%)`,
     ].join("\n");
     await sendTelegramReply(chatId, normalized);
   }

@@ -56,6 +56,9 @@ Open [http://localhost:3000](http://localhost:3000).
 - Telegram words are stored under a separate user namespace: `telegram:<telegram_user_id>`.
 - Web login users and Telegram users are isolated by default.
 - Bot replies (`Saved...`, `/link` status) require `TELEGRAM_BOT_TOKEN`.
+- Smart parsing mode can use OpenAI extraction if `OPENAI_API_KEY` is set.
+- Optional model override: `OPENAI_MODEL` (default `gpt-4o-mini`).
+- Without OpenAI key, heuristic fallback is still active (single words/collocations/sentences are parsed and saved).
 
 Set webhook:
 ```bash
