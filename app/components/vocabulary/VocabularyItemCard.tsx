@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDate } from "@/app/features/vocabulary/helpers";
+import { formatDate, inferMasteryLevel, masteryProgress } from "@/app/features/vocabulary/helpers";
 import { EditDraft, ENTRY_TYPE, LEARNING_STATUS, LearningStatus, VocabEntry } from "@/app/features/vocabulary/types";
 
 type Props = {
@@ -18,6 +18,8 @@ type Props = {
 
 export function VocabularyItemCard(props: Props) {
   const { item, isEditing, draft } = props;
+  const mastery = inferMasteryLevel(item);
+  const masteryPct = masteryProgress(mastery);
   const statusStyles: Record<LearningStatus, string> = {
     new: "bg-sky-100 text-sky-800",
     learning: "bg-amber-100 text-amber-800",
@@ -41,6 +43,9 @@ export function VocabularyItemCard(props: Props) {
                 className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyles[item.status]}`}
               >
                 {item.status}
+              </span>
+              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+                {mastery}
               </span>
               <button
                 onClick={() => props.onStartEdit(item)}
@@ -96,6 +101,18 @@ export function VocabularyItemCard(props: Props) {
           {item.tags.length > 0 ? (
             <p className="mt-2 text-xs text-emerald-800/80">#{item.tags.join(" #")}</p>
           ) : null}
+          <div className="mt-2">
+            <div className="flex items-center justify-between text-[11px] text-emerald-900/70">
+              <span>Mastery progress</span>
+              <span>{masteryPct}%</span>
+            </div>
+            <div className="mt-1 h-1.5 rounded-full bg-emerald-100">
+              <div
+                className="h-1.5 rounded-full bg-emerald-500"
+                style={{ width: `${masteryPct}%` }}
+              />
+            </div>
+          </div>
         </>
       ) : (
         <div className="grid gap-2">

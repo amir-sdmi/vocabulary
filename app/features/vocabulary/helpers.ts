@@ -6,6 +6,7 @@ import {
   LearningStatus,
   ReviewMode,
   ReviewErrorType,
+  MasteryLevel,
   VocabEntry,
   VocabStats,
   VocabularyFilters,
@@ -315,4 +316,19 @@ export function parseCsvRows(raw: string): string[][] {
     rows.push(row);
   }
   return rows;
+}
+
+export function inferMasteryLevel(item: VocabEntry): MasteryLevel {
+  const score = item.lastScore ?? 0;
+  if (score >= 90 && item.intervalDays >= 7 && item.useCount >= 6) return "fluent";
+  if (score >= 80 && item.intervalDays >= 4 && item.useCount >= 4) return "stable";
+  if (score >= 65 && item.useCount >= 2) return "practiced";
+  return "seen";
+}
+
+export function masteryProgress(level: MasteryLevel): number {
+  if (level === "fluent") return 100;
+  if (level === "stable") return 75;
+  if (level === "practiced") return 50;
+  return 25;
 }

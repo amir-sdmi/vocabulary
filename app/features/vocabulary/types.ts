@@ -267,3 +267,56 @@ export type MemoryGraph = {
   clusters: MemoryGraphCluster[];
   recommendations: MemoryGraphRecommendation[];
 };
+
+export type MasteryLevel = "seen" | "practiced" | "stable" | "fluent";
+
+export type StudyPlanTask = {
+  day: string;
+  mode: ReviewMode;
+  title: string;
+  focusTerms: string[];
+  reason: string;
+};
+
+export type StudyPlan = {
+  generatedAt: number;
+  today: string;
+  tasks: StudyPlanTask[];
+};
+
+export type TopicMission = {
+  id: string;
+  tag: string;
+  title: string;
+  target: number;
+  progress: number;
+  status: "active" | "completed";
+  suggestedTerms: string[];
+};
+
+export type NotificationHint = {
+  bestWindows: Array<{ hour: number; score: number }>;
+  streakRescue: string | null;
+  suggestedNext: string;
+};
+
+export type AnalyticsSnapshot = {
+  totalWords: number;
+  activeWords: number;
+  averageMastery: number;
+  levelBreakdown: Record<MasteryLevel, number>;
+  retentionRate7d: number;
+  averageResponseScore7d: number;
+  topImprovedTerms: string[];
+  strugglingTerms: string[];
+};
+
+export type SentenceLabResult = {
+  score: number;
+  grammar: number;
+  naturalness: number;
+  register: "casual" | "neutral" | "formal";
+  rewriteCasual: string;
+  rewriteFormal: string;
+  tips: string[];
+};

@@ -53,6 +53,13 @@ export function MemoryGraphPanel() {
           </div>
 
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            <article className="rounded-xl border border-emerald-900/10 bg-white p-3 lg:col-span-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-900/70">
+                Interactive graph canvas
+              </p>
+              <GraphCanvas graph={graph} />
+            </article>
+
             <article className="rounded-xl border border-emerald-900/10 bg-emerald-50/40 p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-emerald-900/70">
                 Top clusters
@@ -103,6 +110,104 @@ function Stat({ label, value }: { label: string; value: number }) {
     <div className="rounded-lg border border-emerald-900/10 bg-emerald-50 px-3 py-2">
       <p className="text-[11px] uppercase tracking-wide text-emerald-900/70">{label}</p>
       <p className="text-lg font-semibold text-emerald-950">{value}</p>
+    </div>
+  );
+}
+
+function GraphCanvas({ graph }: { graph: MemoryGraph }) {
+  const width = 920;
+  const height = 360;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const terms = graph.nodes.filter((n) => n.type === "term").slice(0, 24);
+  const others = graph.nodes.filter((n) => n.type !== "term").slice(0, 30);
+  const termMap = new Map<string, { x: number; y: number; label: string; r: number }>();
+  const otherMap = new Map<string, { x: number; y: number; label: string; r: number; type: string }>();
+
+  terms.forEach((node, i) => {
+    const angle = (Math.PI * 2 * i) / Math.max(1, terms.length);
+    const radius = 95 + (i % 3) * 24;
+    termMap.set(node.id, {
+      x: centerX + Math.cos(angle) * radius,
+      y: centerY + Math.sin(angle) * radius,
+      label: node.label,
+      r: Math.max(5, Math.min(12, 4 + node.weight * 0.35)),
+    });
+  });
+
+  others.forEach((node, i) => {
+    const angle = (Math.PI * 2 * i) / Math.max(1, others.length);
+    const radius = 165 + (i % 4) * 16;
+    otherMap.set(node.id, {
+      x: centerX + Math.cos(angle) * radius,
+      y: centerY + Math.sin(angle) * radius,
+      label: node.label,
+      type: node.type,
+      r: Math.max(4, Math.min(9, 3 + node.weight * 0.3)),
+    });
+  });
+
+  const points = new Map([...termMap.entries(), ...otherMap.entries()]);
+  const edges = graph.edges.filter((e) => points.has(e.from) && points.has(e.to)).slice(0, 120);
+
+  return (
+    <div className="mt-2 overflow-auto rounded-lg border border-emerald-900/10 bg-[radial-gradient(circle_at_top_left,#f2fff6_0%,#ffffff_55%,#eefaf4_100%)] p-2">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-[320px] w-full min-w-[760px]">
+        {edges.map((edge) => {
+          const from = points.get(edge.from)!;
+          const to = points.get(edge.to)!;
+          return (
+            <line
+              key={edge.id}
+              x1={from.x}
+              y1={from.y}
+              x2={to.x}
+              y2={to.y}
+              stroke="rgba(16, 88, 53, 0.22)"
+              strokeWidth={Math.min(2.5, 0.5 + edge.weight * 0.18)}
+            />
+          );
+        })}
+
+        {Array.from(otherMap.entries()).map(([id, point]) => (
+          <g key={id}>
+            <circle
+              cx={point.x}
+              cy={point.y}
+              r={point.r}
+              fill={
+                point.type === "tag"
+                  ? "rgba(125, 211, 252, 0.7)"
+                  : point.type === "error"
+                    ? "rgba(253, 164, 175, 0.75)"
+                    : "rgba(253, 230, 138, 0.75)"
+              }
+              stroke="rgba(9, 35, 20, 0.35)"
+            />
+          </g>
+        ))}
+
+        {Array.from(termMap.entries()).map(([id, point]) => (
+          <g key={id}>
+            <circle
+              cx={point.x}
+              cy={point.y}
+              r={point.r}
+              fill="rgba(16, 185, 129, 0.82)"
+              stroke="rgba(9, 35, 20, 0.38)"
+              strokeWidth={1.2}
+            />
+            <text
+              x={point.x + point.r + 3}
+              y={point.y + 3}
+              fontSize="9"
+              fill="rgba(9, 35, 20, 0.88)"
+            >
+              {point.label}
+            </text>
+          </g>
+        ))}
+      </svg>
     </div>
   );
 }

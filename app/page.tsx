@@ -6,67 +6,88 @@ import { VocabularyWorkspace } from "./components/VocabularyWorkspace";
 
 const featureGuides = [
   {
-    title: "Context Memory Graph",
-    what: "Builds semantic links across your terms, tags, collocations, lexical relations, and repeated error patterns.",
-    how: "Open Context Memory Graph panel, inspect top clusters, then run the recommended drills directly in coach modes.",
+    title: "Context Memory Graph Canvas",
+    what: "Visualizes semantic links between terms, collocations, tags, and repeated mistakes.",
+    how: "Open Context Memory Graph panel, inspect clusters, and run recommended drills for linked terms.",
     icon: "/globe.svg",
     tone: "emerald",
+  },
+  {
+    title: "AI Sentence Lab",
+    what: "Scores grammar and naturalness, then rewrites your sentence in casual and formal styles.",
+    how: "Open Sentence Lab, enter a sentence with optional target term, and apply feedback instantly.",
+    icon: "/file.svg",
+    tone: "sky",
+  },
+  {
+    title: "7-Day Auto Study Plan",
+    what: "Generates a day-by-day plan from weak areas, due cards, and graph recommendations.",
+    how: "Open Study Plan panel, check today’s task, and start the suggested review mode.",
+    icon: "/window.svg",
+    tone: "amber",
+  },
+  {
+    title: "Smart Notifications",
+    what: "Suggests best review windows and streak-rescue reminders from your usage patterns.",
+    how: "Open Smart Notifications panel and enable browser reminders for your top time window.",
+    icon: "/window.svg",
+    tone: "emerald",
+  },
+  {
+    title: "Mastery Levels",
+    what: "Tracks each card from seen to practiced to stable to fluent with progress indicators.",
+    how: "Review cards regularly and monitor mastery badges on each vocabulary item.",
+    icon: "/file.svg",
+    tone: "emerald",
+  },
+  {
+    title: "Topic Missions",
+    what: "Creates weekly mission goals for your most-used tags like work, travel, or meetings.",
+    how: "Add tagged words, open Missions panel, and complete suggested terms until target is reached.",
+    icon: "/globe.svg",
+    tone: "amber",
+  },
+  {
+    title: "Shadowing + Pronunciation",
+    what: "Lets you listen, repeat, and compare spoken output against target phrases.",
+    how: "Use Pronunciation panel, play TTS, record repeat, and iterate until match improves.",
+    icon: "/window.svg",
+    tone: "sky",
+  },
+  {
+    title: "Telegram Coach Mode",
+    what: "After saving a term, bot asks a follow-up sentence to force active production.",
+    how: "Send any word/phrase, then reply with a sentence using the prompted term.",
+    icon: "/globe.svg",
+    tone: "emerald",
+  },
+  {
+    title: "Deck Export Profiles",
+    what: "Exports tailored Anki decks for clean review, exam prep, and speaking practice.",
+    how: "Use toolbar export buttons: Anki Clean, Exam Deck, or Speaking Deck.",
+    icon: "/file.svg",
+    tone: "amber",
+  },
+  {
+    title: "Learning Analytics Dashboard",
+    what: "Shows retention, mastery distribution, improving terms, and struggling terms.",
+    how: "Open Analytics panel and use the insights to adjust your next week focus.",
+    icon: "/window.svg",
+    tone: "sky",
   },
   {
     title: "Import from CSV, Anki, Google Sheets",
-    what: "Migrate existing vocabulary in minutes instead of rebuilding manually.",
-    how: "Open Import panel, choose source, paste CSV content (or Sheets CSV URL), run Preview, then Execute Import.",
+    what: "Migrates your old vocabulary into one clean workspace with preview before writing.",
+    how: "Open Import panel, paste content or Sheets CSV URL, run preview, then execute import.",
     icon: "/file.svg",
     tone: "amber",
   },
   {
-    title: "Advanced search + saved filters",
-    what: "Find words by meaning, tag, status, mistake type, entry type, collocation, and due state.",
-    how: "Set your filters in toolbar, name the setup, click Save filter, and reuse it for one-click study sessions.",
-    icon: "/window.svg",
-    tone: "sky",
-  },
-  {
-    title: "Word families + lexical links",
-    what: "Store noun/verb/adjective/adverb variants with synonyms, antonyms, and collocations.",
-    how: "Edit a card, fill lexical fields, then use those links to build stronger phrase-level memory.",
-    icon: "/globe.svg",
-    tone: "emerald",
-  },
-  {
-    title: "Skill-based review modes",
-    what: "Train recall, writing, collocation, error correction, active usage, weak area, and use-today drills.",
-    how: "Open Daily Coach and start the mode that matches your current weakness.",
-    icon: "/globe.svg",
-    tone: "sky",
-  },
-  {
-    title: "Daily goal + meaningful streak",
-    what: "Track true progress with a target of 10 correct production answers per day.",
-    how: "Complete production tasks in coach mode and watch your streak update automatically in Insights.",
-    icon: "/file.svg",
-    tone: "emerald",
-  },
-  {
-    title: "Weekly report with recommendations",
-    what: "See retained, forgotten, usable words, top errors, weak words, and next-week focus.",
-    how: "Open Insights for live summary or export weekly report text from the toolbar.",
-    icon: "/window.svg",
-    tone: "amber",
-  },
-  {
-    title: "Telegram smart intake",
-    what: "Send any messy text, word, phrase, or sentence and the bot extracts a clean vocabulary record.",
-    how: "Message your bot naturally or use structured format: add: term | meaning | tags | sentence.",
+    title: "Advanced Search + Saved Filters",
+    what: "Searches by meaning, status, due, collocation, and error type with reusable filter presets.",
+    how: "Set filters in toolbar, save as named filter, and reuse it as a one-click study lens.",
     icon: "/window.svg",
     tone: "emerald",
-  },
-  {
-    title: "Future-ready media pipeline",
-    what: "Architecture is prepared for voice-note and image ingestion without redesigning your data.",
-    how: "Current release handles text-first capture; media adapters can be plugged into the same intake flow.",
-    icon: "/file.svg",
-    tone: "sky",
   },
 ] as const;
 
@@ -89,6 +110,29 @@ const workflowSteps = [
   },
 ] as const;
 
+const solutionTracks = [
+  {
+    title: "I forget words quickly",
+    solution:
+      "Use Memory Graph + Weak Area mode + Study Plan to revisit connected terms in context instead of isolated repetition.",
+  },
+  {
+    title: "I know words but cannot use them",
+    solution:
+      "Run Active Usage and Sentence Lab daily, then close loop with Telegram Coach sentence follow-up.",
+  },
+  {
+    title: "My vocabulary is messy",
+    solution:
+      "Import old lists, normalize cards, add lexical links, and manage with saved filters and missions.",
+  },
+  {
+    title: "I lose consistency",
+    solution:
+      "Follow daily goal + smart notification windows + weekly report recommendations to keep momentum.",
+  },
+] as const;
+
 export default async function Home() {
   const session = await auth();
   const userEmail = session?.user?.email;
@@ -107,11 +151,17 @@ export default async function Home() {
             <Link href="#workflow" className="hover:text-emerald-700">
               Workflow
             </Link>
+            <Link href="#solutions" className="hover:text-emerald-700">
+              Solutions
+            </Link>
             <Link href="#features" className="hover:text-emerald-700">
               Features
             </Link>
             <Link href="#telegram" className="hover:text-emerald-700">
               Telegram
+            </Link>
+            <Link href="/guide" className="hover:text-emerald-700">
+              Guide
             </Link>
             {userEmail ? <SignOutButton /> : null}
           </nav>
@@ -191,6 +241,19 @@ export default async function Home() {
           </div>
         </section>
 
+        <section id="solutions" className="mt-16 scroll-mt-24">
+          <SectionHeader
+            eyebrow="Problem to Solution"
+            title="Pick your blocker and follow the matching path"
+            subtitle="Each track combines specific features that solve one practical learning problem."
+          />
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {solutionTracks.map((track) => (
+              <SolutionCard key={track.title} title={track.title} solution={track.solution} />
+            ))}
+          </div>
+        </section>
+
         <section id="features" className="mt-16 scroll-mt-24">
           <SectionHeader
             eyebrow="Feature Playbook"
@@ -209,6 +272,26 @@ export default async function Home() {
               />
             ))}
           </div>
+          <article className="mt-6 relative overflow-hidden rounded-2xl border border-emerald-900/10 bg-white/90 p-5 shadow-sm sm:p-6">
+            <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-sky-200/35 blur-3xl" />
+            <div className="pointer-events-none absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
+            <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-emerald-950">
+                  Need step-by-step instructions for every feature?
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-emerald-900/80">
+                  Open the complete guide with exact actions, sample workflows, and best practices.
+                </p>
+              </div>
+              <Link
+                href="/guide"
+                className="inline-flex items-center justify-center rounded-xl bg-emerald-900 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
+              >
+                Open Full Guide
+              </Link>
+            </div>
+          </article>
         </section>
 
         <section id="telegram" className="mt-16 scroll-mt-24">
@@ -355,6 +438,19 @@ function FeatureGuideCard({
             {how}
           </p>
         </div>
+      </div>
+    </article>
+  );
+}
+
+function SolutionCard({ title, solution }: { title: string; solution: string }) {
+  return (
+    <article className="relative overflow-hidden rounded-2xl border border-emerald-900/10 bg-white/90 p-5 shadow-sm">
+      <div className="pointer-events-none absolute -left-6 -top-6 h-24 w-24 rounded-full bg-emerald-200/35 blur-2xl" />
+      <div className="pointer-events-none absolute -right-6 bottom-0 h-24 w-24 rounded-full bg-sky-200/25 blur-2xl" />
+      <div className="relative z-10">
+        <h3 className="text-base font-semibold text-emerald-950">{title}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-emerald-900/85">{solution}</p>
       </div>
     </article>
   );

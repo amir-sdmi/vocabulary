@@ -34,8 +34,10 @@ type Props = {
 };
 
 export function VocabularyToolbar(props: Props) {
-  function openExport(format: "csv" | "json" | "anki" | "weekly") {
-    window.location.assign(`/api/vocab/export?format=${format}`);
+  function openExport(format: "csv" | "json" | "anki" | "weekly", profile?: string) {
+    const params = new URLSearchParams({ format });
+    if (profile) params.set("profile", profile);
+    window.location.assign(`/api/vocab/export?${params.toString()}`);
   }
 
   return (
@@ -183,7 +185,21 @@ export function VocabularyToolbar(props: Props) {
           onClick={() => openExport("anki")}
           className="rounded-lg border border-emerald-900/20 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100"
         >
-          Export Anki
+          Anki Clean
+        </button>
+        <button
+          type="button"
+          onClick={() => openExport("anki", "exam")}
+          className="rounded-lg border border-emerald-900/20 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100"
+        >
+          Exam Deck
+        </button>
+        <button
+          type="button"
+          onClick={() => openExport("anki", "speaking")}
+          className="rounded-lg border border-emerald-900/20 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100"
+        >
+          Speaking Deck
         </button>
         <button
           type="button"

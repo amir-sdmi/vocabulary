@@ -4,6 +4,12 @@ import { getTelegramUserId } from "@/app/lib/auth-user";
 import { consumeLinkCode, resolveTelegramOwnerUserId } from "@/app/lib/account-link";
 import { extractTelegramEntry } from "@/app/lib/telegram-intake";
 import { parseJsonBody } from "@/app/lib/server/http";
+import {
+  clearPendingCoach,
+  getPendingCoach,
+  incrementPendingTry,
+  setPendingCoach,
+} from "@/app/lib/repositories/telegram-coach-repo";
 
 const TELEGRAM_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -82,6 +88,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: result.ok, message: result.message });
   }
 
+  if (/^\/(skip|done)$/i.test(text)) {
+    await clearPendingCoach(telegramUserId);
+    const chatId = update.message?.chat?.id;
+    if (chatId) {
+      await sendTelegramReply(chatId, "Coach prompt skipped. Send another word whenever you are ready.");
+    }
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
   if (text.startsWith("/") && !text.toLowerCase().startsWith("/link")) {
     const chatId = update.message?.chat?.id;
     if (chatId) {
@@ -94,9 +109,44 @@ export async function POST(request: NextRequest) {
   }
 
   const ownerId = await resolveTelegramOwnerUserId(telegramUserId);
+  const pending = await getPendingCoach(telegramUserId);
+  const chatId = update.message?.chat?.id;
+
+  if (pending && text.split(/\s+/).length >= 3) {
+    const usesTerm = text.toLowerCase().includes(pending.term.toLowerCase());
+    if (usesTerm) {
+      await saveTelegramExtractedEntry(ownerId, {
+        term: pending.term,
+        sentence: text,
+        meaning: undefined,
+        tags: ["telegram-coach"],
+        collocations: [],
+        synonyms: [],
+        antonyms: [],
+        confidence: 0.9,
+        source: "heuristic",
+      });
+      await clearPendingCoach(telegramUserId);
+      if (chatId) {
+        await sendTelegramReply(
+          chatId,
+          `Great sentence. I saved it as a usage example for "${pending.term}". Send next word or phrase.`,
+        );
+      }
+      return NextResponse.json({ ok: true, coached: true });
+    }
+    const retry = await incrementPendingTry(telegramUserId);
+    if (chatId) {
+      await sendTelegramReply(
+        chatId,
+        `Try again using "${pending.term}" directly in your sentence.${(retry?.tries ?? 0) >= 2 ? " You can send /skip to move on." : ""}`,
+      );
+    }
+    return NextResponse.json({ ok: true, coached: true, retry: true });
+  }
+
   const extracted = await extractTelegramEntry(text);
   const result = await saveTelegramExtractedEntry(ownerId, extracted);
-  const chatId = update.message?.chat?.id;
   if (chatId) {
     const normalized = [
       `${result.action === "created" ? "Saved" : "Updated"}: ${result.entry.term}`,
@@ -104,8 +154,11 @@ export async function POST(request: NextRequest) {
       `Tags: ${result.entry.tags.join(", ") || "n/a"}`,
       `Example: ${result.entry.userExample || extracted.sentence || "n/a"}`,
       `Parser: ${extracted.source} (${Math.round(extracted.confidence * 100)}%)`,
+      "",
+      `Coach task: write one sentence using "${result.entry.term}". Send /skip to skip.`,
     ].join("\n");
     await sendTelegramReply(chatId, normalized);
   }
+  await setPendingCoach(telegramUserId, result.entry.term);
   return NextResponse.json({ ok: true });
 }
