@@ -3,7 +3,18 @@
 import { useState } from "react";
 import { ReviewQueueItem } from "@/app/features/vocabulary/types";
 
-type ReviewMode = "daily" | "trouble" | "quick" | "tag";
+type ReviewMode =
+  | "daily"
+  | "trouble"
+  | "quick"
+  | "tag"
+  | "recall"
+  | "writing"
+  | "collocation"
+  | "error_correction"
+  | "active_usage"
+  | "weak_area"
+  | "use_today";
 
 export function CoachPanel() {
   const [mode, setMode] = useState<ReviewMode>("daily");
@@ -134,6 +145,48 @@ export function CoachPanel() {
           >
             Review tag
           </button>
+          <button
+            onClick={() => void startSession("recall")}
+            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
+          >
+            Recall
+          </button>
+          <button
+            onClick={() => void startSession("writing")}
+            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
+          >
+            Writing
+          </button>
+          <button
+            onClick={() => void startSession("collocation")}
+            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
+          >
+            Collocation
+          </button>
+          <button
+            onClick={() => void startSession("error_correction")}
+            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
+          >
+            Error fix
+          </button>
+          <button
+            onClick={() => void startSession("active_usage")}
+            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
+          >
+            Active usage
+          </button>
+          <button
+            onClick={() => void startSession("weak_area")}
+            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
+          >
+            Weak area
+          </button>
+          <button
+            onClick={() => void startSession("use_today")}
+            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
+          >
+            Use today
+          </button>
         </div>
       </div>
 
@@ -161,7 +214,8 @@ export function CoachPanel() {
       {current && currentTask ? (
         <div className="mt-4 space-y-3 rounded-xl border border-emerald-900/10 bg-white p-4">
           <p className="text-xs text-emerald-900/60">
-            Word {index + 1}/{items.length} • Task {taskIndex + 1}/3 • <strong>{current.vocab.term}</strong>
+            Word {index + 1}/{items.length} • Task {taskIndex + 1}/{current.tasks.length} •{" "}
+            <strong>{current.vocab.term}</strong>
           </p>
           <p className="text-sm text-emerald-900">{currentTask.prompt}</p>
           <textarea

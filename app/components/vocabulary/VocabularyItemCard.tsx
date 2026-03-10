@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDate } from "@/app/features/vocabulary/helpers";
-import { EditDraft, LEARNING_STATUS, LearningStatus, VocabEntry } from "@/app/features/vocabulary/types";
+import { EditDraft, ENTRY_TYPE, LEARNING_STATUS, LearningStatus, VocabEntry } from "@/app/features/vocabulary/types";
 
 type Props = {
   item: VocabEntry;
@@ -33,7 +33,7 @@ export function VocabularyItemCard(props: Props) {
             <div>
               <h3 className="text-lg font-semibold text-emerald-950">{item.term}</h3>
               <p className="text-sm text-emerald-900/75">
-                {item.pos} • updated {formatDate(item.updatedAt)}
+                {item.entryType} / {item.pos} • updated {formatDate(item.updatedAt)}
               </p>
             </div>
             <div className="flex gap-2">
@@ -70,6 +70,29 @@ export function VocabularyItemCard(props: Props) {
               <span className="font-medium">Example:</span> {item.userExample}
             </p>
           ) : null}
+          {item.synonyms.length > 0 ? (
+            <p className="mt-1 text-xs text-emerald-900/85">
+              <span className="font-medium">Synonyms:</span> {item.synonyms.join(", ")}
+            </p>
+          ) : null}
+          {item.antonyms.length > 0 ? (
+            <p className="mt-1 text-xs text-emerald-900/85">
+              <span className="font-medium">Antonyms:</span> {item.antonyms.join(", ")}
+            </p>
+          ) : null}
+          {(item.wordFamily.noun || item.wordFamily.verb || item.wordFamily.adjective || item.wordFamily.adverb) ? (
+            <p className="mt-1 text-xs text-emerald-900/85">
+              <span className="font-medium">Word family:</span>{" "}
+              {[
+                item.wordFamily.noun ? `noun=${item.wordFamily.noun}` : "",
+                item.wordFamily.verb ? `verb=${item.wordFamily.verb}` : "",
+                item.wordFamily.adjective ? `adjective=${item.wordFamily.adjective}` : "",
+                item.wordFamily.adverb ? `adverb=${item.wordFamily.adverb}` : "",
+              ]
+                .filter(Boolean)
+                .join(" • ")}
+            </p>
+          ) : null}
           {item.tags.length > 0 ? (
             <p className="mt-2 text-xs text-emerald-800/80">#{item.tags.join(" #")}</p>
           ) : null}
@@ -82,6 +105,21 @@ export function VocabularyItemCard(props: Props) {
               onChange={(event) => props.setDraft((current) => (current ? { ...current, term: event.target.value } : current))}
               className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm"
             />
+            <select
+              value={draft.entryType}
+              onChange={(event) =>
+                props.setDraft((current) =>
+                  current ? { ...current, entryType: event.target.value as "word" | "phrase" } : current,
+                )
+              }
+              className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm"
+            >
+              {ENTRY_TYPE.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
             <input
               value={draft.pos}
               onChange={(event) => props.setDraft((current) => (current ? { ...current, pos: event.target.value } : current))}
@@ -140,6 +178,58 @@ export function VocabularyItemCard(props: Props) {
             placeholder="collocations, comma, separated"
             className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm"
           />
+          <input
+            value={draft.synonyms}
+            onChange={(event) =>
+              props.setDraft((current) => (current ? { ...current, synonyms: event.target.value } : current))
+            }
+            placeholder="synonyms, comma, separated"
+            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm"
+          />
+          <input
+            value={draft.antonyms}
+            onChange={(event) =>
+              props.setDraft((current) => (current ? { ...current, antonyms: event.target.value } : current))
+            }
+            placeholder="antonyms, comma, separated"
+            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm"
+          />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <input
+              value={draft.wordFamilyNoun}
+              onChange={(event) =>
+                props.setDraft((current) => (current ? { ...current, wordFamilyNoun: event.target.value } : current))
+              }
+              placeholder="word family noun"
+              className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm"
+            />
+            <input
+              value={draft.wordFamilyVerb}
+              onChange={(event) =>
+                props.setDraft((current) => (current ? { ...current, wordFamilyVerb: event.target.value } : current))
+              }
+              placeholder="word family verb"
+              className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm"
+            />
+            <input
+              value={draft.wordFamilyAdjective}
+              onChange={(event) =>
+                props.setDraft((current) =>
+                  current ? { ...current, wordFamilyAdjective: event.target.value } : current,
+                )
+              }
+              placeholder="word family adjective"
+              className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm"
+            />
+            <input
+              value={draft.wordFamilyAdverb}
+              onChange={(event) =>
+                props.setDraft((current) => (current ? { ...current, wordFamilyAdverb: event.target.value } : current))
+              }
+              placeholder="word family adverb"
+              className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm"
+            />
+          </div>
           <textarea
             value={draft.aiExamples}
             onChange={(event) =>

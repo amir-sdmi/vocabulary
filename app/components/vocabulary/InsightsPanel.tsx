@@ -17,9 +17,26 @@ type MistakesResponse = {
   notebook: Array<{ type: string; count: number; tip: string }>;
 };
 
+type GoalResponse = {
+  today: {
+    correctProductionCount: number;
+    target: number;
+    met: boolean;
+  };
+  streak: number;
+};
+
+type WeeklyResponse = {
+  weekStart: string;
+  weekEnd: string;
+  recommendation: string;
+};
+
 export function InsightsPanel() {
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [mistakes, setMistakes] = useState<MistakesResponse | null>(null);
+  const [goal, setGoal] = useState<GoalResponse | null>(null);
+  const [weekly, setWeekly] = useState<WeeklyResponse | null>(null);
 
   async function load() {
     void fetch("/api/stats")
@@ -30,6 +47,14 @@ export function InsightsPanel() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setMistakes(data))
       .catch(() => setMistakes(null));
+    void fetch("/api/goal")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setGoal(data))
+      .catch(() => setGoal(null));
+    void fetch("/api/reports/weekly")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setWeekly(data))
+      .catch(() => setWeekly(null));
   }
 
   useEffect(() => {
@@ -60,6 +85,17 @@ export function InsightsPanel() {
               <Metric label="Reviews (7d)" value={stats.reviews7d} />
               <Metric label="Avg score (7d)" value={stats.avgScore7d} />
             </div>
+            {goal ? (
+              <div className="mt-3 rounded-lg border border-emerald-900/10 bg-emerald-50 px-3 py-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-900/70">
+                  Daily goal
+                </p>
+                <p className="mt-1 text-sm text-emerald-900/90">
+                  Correct production: {goal.today.correctProductionCount}/{goal.today.target} • streak:{" "}
+                  {goal.streak} day(s)
+                </p>
+              </div>
+            ) : null}
             <div className="mt-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-emerald-900/70">
                 Trouble words
@@ -90,6 +126,14 @@ export function InsightsPanel() {
             ))}
           </ul>
         )}
+        {weekly ? (
+          <div className="mt-3 rounded-lg border border-emerald-900/10 bg-white p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-900/70">
+              Weekly Recommendation ({weekly.weekStart} to {weekly.weekEnd})
+            </p>
+            <p className="mt-1 text-xs text-emerald-900/85">{weekly.recommendation}</p>
+          </div>
+        ) : null}
       </article>
     </section>
   );

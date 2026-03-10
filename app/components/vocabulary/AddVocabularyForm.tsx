@@ -4,10 +4,12 @@ import { FormEvent } from "react";
 
 type Props = {
   term: string;
+  meaning: string;
   sentence: string;
   newTags: string;
   creating: boolean;
   onTermChange: (value: string) => void;
+  onMeaningChange: (value: string) => void;
   onSentenceChange: (value: string) => void;
   onNewTagsChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
@@ -31,6 +33,12 @@ export function AddVocabularyForm(props: Props) {
           placeholder="Tags (work, travel, daily)"
           className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm outline-none ring-emerald-300 focus:ring"
         />
+        <input
+          value={props.meaning}
+          onChange={(event) => props.onMeaningChange(event.target.value)}
+          placeholder="Meaning (English)"
+          className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm outline-none ring-emerald-300 focus:ring sm:col-span-2"
+        />
         <textarea
           value={props.sentence}
           onChange={(event) => props.onSentenceChange(event.target.value)}
@@ -39,7 +47,7 @@ export function AddVocabularyForm(props: Props) {
         />
         <div className="flex items-center justify-between sm:col-span-2">
           <div className="text-xs text-emerald-900/70">
-            Tip: Telegram format also works: <code>add: term | sentence</code>
+            Tip: Telegram format: <code>add: term | meaning | tags | sentence</code>
           </div>
           <button
             type="submit"

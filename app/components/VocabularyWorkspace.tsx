@@ -7,6 +7,7 @@ import { VocabularyItemCard } from "@/app/components/vocabulary/VocabularyItemCa
 import { VocabularyStats } from "@/app/components/vocabulary/VocabularyStats";
 import { VocabularyToolbar } from "@/app/components/vocabulary/VocabularyToolbar";
 import { useVocabularyWorkspace } from "@/app/components/vocabulary/useVocabularyWorkspace";
+import { TelegramMessages } from "@/app/components/TelegramMessages";
 
 export function VocabularyWorkspace() {
   const vm = useVocabularyWorkspace();
@@ -18,10 +19,12 @@ export function VocabularyWorkspace() {
 
       <AddVocabularyForm
         term={vm.term}
+        meaning={vm.meaningInput}
         sentence={vm.sentence}
         newTags={vm.newTags}
         creating={vm.creating}
         onTermChange={vm.setTerm}
+        onMeaningChange={vm.setMeaningInput}
         onSentenceChange={vm.setSentence}
         onNewTagsChange={vm.setNewTags}
         onSubmit={vm.onCreate}
@@ -32,17 +35,82 @@ export function VocabularyWorkspace() {
           q={vm.q}
           status={vm.status}
           tag={vm.tag}
+          meaning={vm.meaning}
+          mistakeType={vm.mistakeType}
+          entryType={vm.entryType}
+          collocation={vm.collocation}
+          due={vm.due}
           sort={vm.sort}
           total={vm.items.length}
           error={vm.error}
+          savedFilterId={vm.savedFilterId}
+          savedFilters={vm.savedFilters}
+          newFilterName={vm.newFilterName}
           onQChange={vm.setQ}
           onStatusChange={vm.setStatus}
           onTagChange={vm.setTag}
+          onMeaningChange={vm.setMeaning}
+          onMistakeTypeChange={vm.setMistakeType}
+          onEntryTypeChange={vm.setEntryType}
+          onCollocationChange={vm.setCollocation}
+          onDueChange={vm.setDue}
           onSortChange={vm.setSort}
+          onSavedFilterIdChange={vm.applyFilter}
+          onNewFilterNameChange={vm.setNewFilterName}
+          onSaveFilter={vm.saveCurrentFilter}
+          onDeleteFilter={vm.removeFilter}
           onClearFilters={vm.clearFilters}
         />
         <VocabularyStats stats={vm.stats} />
       </section>
+
+      <section className="rounded-2xl border border-emerald-900/10 bg-white/90 p-4 shadow-sm sm:p-6">
+        <h3 className="text-base font-semibold text-emerald-950">Import (CSV / Anki / Google Sheets CSV)</h3>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <select
+            value={vm.importSource}
+            onChange={(event) => vm.setImportSource(event.target.value as "csv" | "anki" | "google_sheets")}
+            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm"
+          >
+            <option value="csv">CSV</option>
+            <option value="anki">Anki CSV</option>
+            <option value="google_sheets">Google Sheets CSV</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => void vm.previewImportContent()}
+            disabled={vm.importing}
+            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-sm font-medium text-emerald-900"
+          >
+            Preview
+          </button>
+          <button
+            type="button"
+            onClick={() => void vm.executeImportContent()}
+            disabled={vm.importing}
+            className="rounded-lg bg-emerald-900 px-3 py-2 text-sm font-medium text-white"
+          >
+            Execute Import
+          </button>
+        </div>
+        <textarea
+          value={vm.importContent}
+          onChange={(event) => vm.setImportContent(event.target.value)}
+          placeholder="Paste CSV content here (for Google Sheets use File -> Download -> CSV)"
+          className="mt-3 min-h-36 w-full rounded-lg border border-emerald-900/20 bg-white px-3 py-2 text-xs"
+        />
+        {vm.importPreview ? (
+          <div className="mt-3 rounded-lg border border-emerald-900/10 bg-emerald-50/40 p-3 text-xs text-emerald-900">
+            <p>
+              Rows total: {vm.importPreview.rowsTotal} | valid: {vm.importPreview.rowsValid} | create:{" "}
+              {vm.importPreview.rowsCreated} | update: {vm.importPreview.rowsUpdated} | skip:{" "}
+              {vm.importPreview.rowsSkipped}
+            </p>
+          </div>
+        ) : null}
+      </section>
+
+      <TelegramMessages />
 
       <section className="space-y-3">
         {vm.loading ? (

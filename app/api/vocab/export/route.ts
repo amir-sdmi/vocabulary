@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getVocabularies, toCsv } from "@/app/lib/vocabulary";
 import { getRequiredUserId, unauthorizedJson } from "@/app/lib/server/api-auth";
-import { getLearningInsights } from "@/app/lib/review";
+import { generateWeeklyReport, reportToText } from "@/app/lib/reports";
 
 export async function GET(request: NextRequest) {
   const userId = await getRequiredUserId();
@@ -41,23 +41,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (format === "weekly") {
-    const insights = await getLearningInsights(userId);
-    const report = [
-      "WEEKLY VOCABULARY REPORT",
-      "",
-      `Total words: ${insights.totalWords}`,
-      `Retained words: ${insights.retainedWords}`,
-      `Forgotten words: ${insights.forgottenWords}`,
-      `Usable words: ${insights.usableWords}`,
-      `Reviews (7d): ${insights.reviews7d}`,
-      `Average score (7d): ${insights.avgScore7d}`,
-      "",
-      "Top mistakes:",
-      ...insights.topErrors.map((x) => `- ${x.type}: ${x.count}`),
-      "",
-      "Trouble words:",
-      ...insights.troubleWords.map((x) => `- ${x.term} (lapses: ${x.lapses}, score: ${x.lastScore ?? 0})`),
-    ].join("\n");
+    const report = reportToText(await generateWeeklyReport(userId));
     return new NextResponse(report, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createVocabularyFromTelegramText } from "@/app/lib/vocabulary";
 import { getTelegramUserId } from "@/app/lib/auth-user";
 import { consumeLinkCode, resolveTelegramOwnerUserId } from "@/app/lib/account-link";
+import { parseAddCommand, parseNaturalAddText } from "@/app/features/vocabulary/helpers";
 
 const TELEGRAM_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -16,6 +17,16 @@ async function sendTelegramReply(chatId: number | string, text: string) {
       text,
     }),
   }).catch(() => undefined);
+}
+
+async function handleMediaIngestionStub(update: {
+  message?: { voice?: unknown; photo?: unknown[] };
+}) {
+  if (update?.message?.voice || (update?.message?.photo && update.message.photo.length > 0)) {
+    // Placeholder hook for future STT/OCR adapters.
+    return { accepted: true };
+  }
+  return { accepted: false };
 }
 
 export async function POST(request: NextRequest) {
@@ -34,8 +45,26 @@ export async function POST(request: NextRequest) {
   }
 
   const update = body as {
-    message?: { text?: string; from?: { id?: number | string }; chat?: { id?: number | string } };
+    message?: {
+      text?: string;
+      voice?: unknown;
+      photo?: unknown[];
+      from?: { id?: number | string };
+      chat?: { id?: number | string };
+    };
   };
+  const media = await handleMediaIngestionStub(update);
+  if (media.accepted) {
+    const chatId = update.message?.chat?.id;
+    if (chatId) {
+      await sendTelegramReply(
+        chatId,
+        "Media received. Voice/image ingestion is prepared and will be processed in a future update.",
+      );
+    }
+    return NextResponse.json({ ok: true, queued: true });
+  }
+
   const text = update?.message?.text?.trim();
   if (!text) {
     return NextResponse.json({ ok: true });
@@ -57,10 +86,17 @@ export async function POST(request: NextRequest) {
   }
 
   const ownerId = await resolveTelegramOwnerUserId(telegramUserId);
-  await createVocabularyFromTelegramText(ownerId, text);
+  const parsed = parseAddCommand(text) ?? parseNaturalAddText(text);
+  const created = await createVocabularyFromTelegramText(ownerId, text);
   const chatId = update.message?.chat?.id;
-  if (chatId) {
-    await sendTelegramReply(chatId, "Saved. Now write 2-3 sentences using this word.");
+  if (chatId && created) {
+    const normalized = [
+      `Saved: ${created.term}`,
+      `Meaning: ${created.definitionEasyEn || parsed.meaning || "n/a"}`,
+      `Tags: ${(created.tags.length > 0 ? created.tags : parsed.tags ?? []).join(", ") || "n/a"}`,
+      `Example: ${created.userExample || parsed.sentence || "n/a"}`,
+    ].join("\n");
+    await sendTelegramReply(chatId, normalized);
   }
   return NextResponse.json({ ok: true });
 }

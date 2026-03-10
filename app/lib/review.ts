@@ -1,14 +1,15 @@
 import {
   PracticeAttempt,
   ReviewErrorType,
+  ReviewMode,
   ReviewQueueItem,
   ReviewTask,
   VocabEntry,
 } from "@/app/features/vocabulary/types";
+import { inferTaskTypesForMode } from "@/app/features/vocabulary/helpers";
+import { registerCorrectProduction } from "@/app/lib/goals";
 import { addPracticeAttempt, getPracticeAttempts } from "@/app/lib/practice";
 import { getVocabularies, updateVocabulary } from "@/app/lib/vocabulary";
-
-type ReviewMode = "daily" | "trouble" | "quick" | "tag";
 
 export async function buildReviewQueue(input: {
   userId: string;
@@ -21,6 +22,15 @@ export async function buildReviewQueue(input: {
   const filtered = list.filter((item) => {
     if (input.mode === "trouble") return item.status === "trouble" || item.lapses >= 2;
     if (input.mode === "tag") return !!input.tag && item.tags.includes(input.tag.toLowerCase());
+    if (input.mode === "collocation") return item.collocations.length > 0;
+    if (input.mode === "weak_area") {
+      return item.errorBuckets.grammar > 0 || item.errorBuckets.collocation > 0 || item.errorBuckets.fluency > 0;
+    }
+    if (input.mode === "use_today") {
+      const now = Date.now();
+      const dayAgo = now - 24 * 60 * 60 * 1000;
+      return (item.lastUsedAt ?? 0) < dayAgo && item.status !== "new";
+    }
     return true;
   });
 
@@ -33,10 +43,10 @@ export async function buildReviewQueue(input: {
     return (a.lastScore ?? 100) - (b.lastScore ?? 100);
   });
 
-  const size = input.mode === "quick" ? 5 : 10;
+  const size = input.mode === "quick" ? 5 : input.mode === "use_today" ? 8 : 10;
   return prioritized.slice(0, size).map((vocab) => ({
     vocab,
-    tasks: buildTasks(vocab),
+    tasks: buildTasks(vocab, input.mode),
   }));
 }
 
@@ -47,7 +57,7 @@ function scoreStatus(status: VocabEntry["status"]): number {
   return 3;
 }
 
-function buildTasks(vocab: VocabEntry): ReviewTask[] {
+function buildTasks(vocab: VocabEntry, mode: ReviewMode): ReviewTask[] {
   const source = vocab.userExample || `I use ${vocab.term} in this sentence.`;
   const escapedTerm = vocab.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const replaced = source.replace(new RegExp(escapedTerm, "ig"), "_____");
@@ -56,11 +66,41 @@ function buildTasks(vocab: VocabEntry): ReviewTask[] {
     ? source.replace(/^I\s+/i, "Yesterday I ")
     : `Rewrite with past tense: ${source}`;
 
-  return [
+  const base: ReviewTask[] = [
     { type: "fill_gap", prompt: `Fill the gap: ${gap}` },
     { type: "rewrite", prompt: `Rewrite naturally: ${rewrite}` },
     { type: "free_sentence", prompt: `Write one new sentence using "${vocab.term}".` },
   ];
+  const modeTypes = new Set(inferTaskTypesForMode(mode));
+  const generated: ReviewTask[] = [];
+  if (modeTypes.has("recall")) {
+    generated.push({
+      type: "recall",
+      prompt: `Recall task: explain "${vocab.term}" in plain English and use it once.`,
+    });
+  }
+  if (modeTypes.has("collocation")) {
+    generated.push({
+      type: "collocation",
+      prompt: `Use "${vocab.term}" with one collocation: ${vocab.collocations.join(", ") || "create one natural collocation"}.`,
+    });
+  }
+  if (modeTypes.has("error_correction")) {
+    generated.push({
+      type: "error_correction",
+      prompt: `Correct this awkward sentence using "${vocab.term}": ${source.replace(vocab.term, `*${vocab.term}*`)}`,
+    });
+  }
+  if (modeTypes.has("active_usage")) {
+    generated.push({
+      type: "active_usage",
+      prompt: `Write a real sentence you could use today with "${vocab.term}".`,
+    });
+  }
+  for (const task of base) {
+    if (modeTypes.has(task.type)) generated.push(task);
+  }
+  return generated.length > 0 ? generated : base;
 }
 
 function clampScore(value: number): number {
@@ -122,6 +162,8 @@ export async function evaluateReviewAnswer(input: {
     lastScore: score,
     lastReviewedAt: Date.now(),
     useCount: vocab.useCount + 1,
+    lastUsedAt: score >= 70 ? Date.now() : vocab.lastUsedAt,
+    difficultyScore: 100 - score,
     errorBuckets: buckets,
   });
 
@@ -142,6 +184,9 @@ export async function evaluateReviewAnswer(input: {
   };
 
   await addPracticeAttempt(input.userId, attempt);
+  if (attempt.pass && (input.taskType === "free_sentence" || input.taskType === "active_usage" || input.taskType === "rewrite")) {
+    await registerCorrectProduction(input.userId);
+  }
   return { attempt, updated };
 }
 

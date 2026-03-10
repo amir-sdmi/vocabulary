@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRequiredUserId, unauthorizedJson } from "@/app/lib/server/api-auth";
 import { evaluateReviewAnswer } from "@/app/lib/review";
+import { ReviewMode, ReviewTaskType } from "@/app/features/vocabulary/types";
 
 export async function POST(request: NextRequest) {
   const userId = await getRequiredUserId();
@@ -15,8 +16,8 @@ export async function POST(request: NextRequest) {
 
   const payload = body as {
     vocabId?: string;
-    mode?: "daily" | "trouble" | "quick" | "tag";
-    taskType?: "fill_gap" | "rewrite" | "free_sentence";
+    mode?: ReviewMode;
+    taskType?: ReviewTaskType;
     prompt?: string;
     answer?: string;
   };
@@ -39,4 +40,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to evaluate answer" }, { status: 400 });
   }
 }
-
