@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchJsonOrNull } from "@/app/lib/client/http";
 
 type StatsResponse = {
   totalWords: number;
@@ -37,29 +38,26 @@ export function InsightsPanel() {
   const [mistakes, setMistakes] = useState<MistakesResponse | null>(null);
   const [goal, setGoal] = useState<GoalResponse | null>(null);
   const [weekly, setWeekly] = useState<WeeklyResponse | null>(null);
-
-  async function load() {
-    void fetch("/api/stats")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setStats(data))
-      .catch(() => setStats(null));
-    void fetch("/api/mistakes")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setMistakes(data))
-      .catch(() => setMistakes(null));
-    void fetch("/api/goal")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setGoal(data))
-      .catch(() => setGoal(null));
-    void fetch("/api/reports/weekly")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setWeekly(data))
-      .catch(() => setWeekly(null));
-  }
+  const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
-    void load();
-  }, []);
+    let active = true;
+    void Promise.all([
+      fetchJsonOrNull<StatsResponse>("/api/stats"),
+      fetchJsonOrNull<MistakesResponse>("/api/mistakes"),
+      fetchJsonOrNull<GoalResponse>("/api/goal"),
+      fetchJsonOrNull<WeeklyResponse>("/api/reports/weekly"),
+    ]).then(([statsData, mistakesData, goalData, weeklyData]) => {
+      if (!active) return;
+      setStats(statsData);
+      setMistakes(mistakesData);
+      setGoal(goalData);
+      setWeekly(weeklyData);
+    });
+    return () => {
+      active = false;
+    };
+  }, [refreshTick]);
 
   return (
     <section className="grid gap-4 lg:grid-cols-2">
@@ -67,7 +65,7 @@ export function InsightsPanel() {
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-base font-semibold text-emerald-950">Progress Snapshot</h3>
           <button
-            onClick={() => void load()}
+            onClick={() => setRefreshTick((v) => v + 1)}
             className="rounded-lg border border-emerald-900/20 bg-white px-2.5 py-1 text-xs font-medium text-emerald-900"
           >
             Refresh

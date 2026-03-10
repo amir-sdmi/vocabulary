@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchJsonOrNull } from "@/app/lib/client/http";
 
 type Message = { id: string; text: string; at: number };
 
@@ -9,10 +10,7 @@ export function TelegramMessages() {
 
   useEffect(() => {
     const fetchMessages = () => {
-      fetch("/api/messages")
-        .then((res) => res.ok ? res.json() : [])
-        .then(setMessages)
-        .catch(() => setMessages([]));
+      void fetchJsonOrNull<Message[]>("/api/messages").then((data) => setMessages(data ?? []));
     };
     fetchMessages();
     const interval = setInterval(fetchMessages, 5000);

@@ -1,20 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ReviewQueueItem } from "@/app/features/vocabulary/types";
-
-type ReviewMode =
-  | "daily"
-  | "trouble"
-  | "quick"
-  | "tag"
-  | "recall"
-  | "writing"
-  | "collocation"
-  | "error_correction"
-  | "active_usage"
-  | "weak_area"
-  | "use_today";
+import { ReviewMode, ReviewQueueItem } from "@/app/features/vocabulary/types";
+import { fetchJson, postJson } from "@/app/lib/client/http";
+import { REVIEW_MODE_OPTIONS } from "@/app/features/vocabulary/review-modes";
 
 export function CoachPanel() {
   const [mode, setMode] = useState<ReviewMode>("daily");
@@ -27,6 +16,12 @@ export function CoachPanel() {
   const [linkCode, setLinkCode] = useState("");
   const [tag, setTag] = useState("");
   const [sessionScores, setSessionScores] = useState<Array<{ term: string; score: number }>>([]);
+  const primaryModes = REVIEW_MODE_OPTIONS.filter((item) =>
+    ["daily", "trouble", "quick"].includes(item.mode),
+  );
+  const skillModes = REVIEW_MODE_OPTIONS.filter(
+    (item) => !["daily", "trouble", "quick", "tag"].includes(item.mode),
+  );
 
   async function startSession(selectedMode: ReviewMode) {
     setMode(selectedMode);
@@ -38,8 +33,7 @@ export function CoachPanel() {
         selectedMode === "tag"
           ? `/api/review/session?mode=tag&tag=${encodeURIComponent(tag.trim().toLowerCase())}`
           : `/api/review/session?mode=${selectedMode}`;
-      const response = await fetch(query);
-      const data = (await response.json()) as { items: ReviewQueueItem[] };
+      const data = await fetchJson<{ items: ReviewQueueItem[] }>(query);
       setItems(data.items ?? []);
       setIndex(0);
       setTaskIndex(0);
@@ -54,20 +48,15 @@ export function CoachPanel() {
     const task = item?.tasks[taskIndex];
     if (!item || !task || !answer.trim()) return;
 
-    const response = await fetch("/api/review/answer", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const data = await postJson<{
+      attempt?: { score: number; feedback: string; fixedAnswer: string };
+    }>("/api/review/answer", {
         vocabId: item.vocab.id,
         mode,
         taskType: task.type,
         prompt: task.prompt,
         answer: answer.trim(),
-      }),
     });
-    const data = (await response.json()) as {
-      attempt?: { score: number; feedback: string; fixedAnswer: string };
-    };
     const attempt = data.attempt;
 
     if (attempt) {
@@ -102,8 +91,7 @@ export function CoachPanel() {
   }
 
   async function generateLinkCode() {
-    const response = await fetch("/api/link/start", { method: "POST" });
-    const data = (await response.json()) as { code?: string };
+    const data = await postJson<{ code?: string }>("/api/link/start", {});
     if (data.code) setLinkCode(data.code);
   }
 
@@ -115,24 +103,17 @@ export function CoachPanel() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-emerald-950">Daily Coach</h2>
         <div className="flex gap-2">
-          <button
-            onClick={() => void startSession("daily")}
-            className="rounded-lg border border-emerald-900/20 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Daily 10
-          </button>
-          <button
-            onClick={() => void startSession("trouble")}
-            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Trouble only
-          </button>
-          <button
-            onClick={() => void startSession("quick")}
-            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Quick 5 min
-          </button>
+          {primaryModes.map((item) => (
+            <button
+              key={item.mode}
+              onClick={() => void startSession(item.mode)}
+              className={`rounded-lg border border-emerald-900/20 px-3 py-1.5 text-sm text-emerald-900 ${
+                item.mode === "daily" ? "bg-emerald-50" : "bg-white"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
           <input
             value={tag}
             onChange={(event) => setTag(event.target.value)}
@@ -145,48 +126,15 @@ export function CoachPanel() {
           >
             Review tag
           </button>
-          <button
-            onClick={() => void startSession("recall")}
-            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Recall
-          </button>
-          <button
-            onClick={() => void startSession("writing")}
-            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Writing
-          </button>
-          <button
-            onClick={() => void startSession("collocation")}
-            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Collocation
-          </button>
-          <button
-            onClick={() => void startSession("error_correction")}
-            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Error fix
-          </button>
-          <button
-            onClick={() => void startSession("active_usage")}
-            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Active usage
-          </button>
-          <button
-            onClick={() => void startSession("weak_area")}
-            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Weak area
-          </button>
-          <button
-            onClick={() => void startSession("use_today")}
-            className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
-          >
-            Use today
-          </button>
+          {skillModes.map((item) => (
+            <button
+              key={item.mode}
+              onClick={() => void startSession(item.mode)}
+              className="rounded-lg border border-emerald-900/20 bg-white px-3 py-1.5 text-sm text-emerald-900"
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
 

@@ -10,3 +10,11 @@ export async function getRequiredUserId(): Promise<string | null> {
 export function unauthorizedJson() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
+
+export async function withAuthorizedUser(
+  handler: (userId: string) => Promise<NextResponse>,
+): Promise<NextResponse> {
+  const userId = await getRequiredUserId();
+  if (!userId) return unauthorizedJson();
+  return handler(userId);
+}

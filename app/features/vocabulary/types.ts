@@ -218,3 +218,52 @@ export type ImportJob = {
   errors: Array<{ row: number; message: string }>;
   previewRows: ImportPreviewRow[];
 };
+
+export type GraphNodeType = "term" | "tag" | "error" | "collocation";
+export type GraphEdgeType =
+  | "tag_of"
+  | "collocates_with"
+  | "synonym_of"
+  | "antonym_of"
+  | "family_of"
+  | "shares_error"
+  | "co_practiced";
+
+export type MemoryGraphNode = {
+  id: string;
+  type: GraphNodeType;
+  label: string;
+  weight: number;
+  vocabId?: string;
+};
+
+export type MemoryGraphEdge = {
+  id: string;
+  from: string;
+  to: string;
+  type: GraphEdgeType;
+  weight: number;
+};
+
+export type MemoryGraphCluster = {
+  id: string;
+  label: string;
+  nodeIds: string[];
+  score: number;
+  reason: string;
+};
+
+export type MemoryGraphRecommendation = {
+  title: string;
+  description: string;
+  focusTerms: string[];
+  reason: string;
+};
+
+export type MemoryGraph = {
+  builtAt: number;
+  nodes: MemoryGraphNode[];
+  edges: MemoryGraphEdge[];
+  clusters: MemoryGraphCluster[];
+  recommendations: MemoryGraphRecommendation[];
+};

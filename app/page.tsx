@@ -6,6 +6,13 @@ import { VocabularyWorkspace } from "./components/VocabularyWorkspace";
 
 const featureGuides = [
   {
+    title: "Context Memory Graph",
+    what: "Builds semantic links across your terms, tags, collocations, lexical relations, and repeated error patterns.",
+    how: "Open Context Memory Graph panel, inspect top clusters, then run the recommended drills directly in coach modes.",
+    icon: "/globe.svg",
+    tone: "emerald",
+  },
+  {
     title: "Import from CSV, Anki, Google Sheets",
     what: "Migrate existing vocabulary in minutes instead of rebuilding manually.",
     how: "Open Import panel, choose source, paste CSV content (or Sheets CSV URL), run Preview, then Execute Import.",

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { withAuthorizedUser } from "@/app/lib/server/api-auth";
-import { getLearningInsights } from "@/app/lib/review";
+import { buildMemoryGraph } from "@/app/lib/memory-graph";
 
 export async function GET() {
   return withAuthorizedUser(async (userId) => {
-    const insights = await getLearningInsights(userId);
-    return NextResponse.json(insights);
+    const graph = await buildMemoryGraph(userId);
+    return NextResponse.json(graph);
   });
 }

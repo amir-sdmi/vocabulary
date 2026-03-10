@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { buildEditDraft, buildVocabStats } from "@/app/features/vocabulary/helpers";
+import { fetchJson, fetchJsonOrNull, patchJson, postJson } from "@/app/lib/client/http";
 import {
   EditDraft,
   ImportJob,
@@ -45,10 +46,8 @@ export function useVocabularyWorkspace() {
   const [importing, setImporting] = useState(false);
 
   const fetchSavedFilters = useCallback(async () => {
-    const response = await fetch("/api/filters");
-    if (!response.ok) return;
-    const data = (await response.json()) as SavedFilter[];
-    setSavedFilters(data);
+    const data = await fetchJsonOrNull<SavedFilter[]>("/api/filters");
+    if (data) setSavedFilters(data);
   }, []);
 
   const fetchVocab = useCallback(async () => {
@@ -65,9 +64,7 @@ export function useVocabularyWorkspace() {
     if (due) params.set("due", due);
     if (savedFilterId) params.set("savedFilterId", savedFilterId);
     try {
-      const response = await fetch(`/api/vocab?${params.toString()}`);
-      if (!response.ok) throw new Error("Failed to load vocabularies");
-      const data = (await response.json()) as VocabEntry[];
+      const data = await fetchJson<VocabEntry[]>(`/api/vocab?${params.toString()}`);
       setItems(sortItems(data, sort));
     } catch {
       setError("Could not load vocabularies.");
@@ -93,17 +90,12 @@ export function useVocabularyWorkspace() {
 
     setCreating(true);
     try {
-      const response = await fetch("/api/vocab", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          term: term.trim(),
-          meaning: meaningInput.trim(),
-          sentence: sentence.trim(),
-          tags: newTags.trim(),
-        }),
+      await postJson("/api/vocab", {
+        term: term.trim(),
+        meaning: meaningInput.trim(),
+        sentence: sentence.trim(),
+        tags: newTags.trim(),
       });
-      if (!response.ok) throw new Error("Create failed");
       setTerm("");
       setMeaningInput("");
       setSentence("");
@@ -118,16 +110,13 @@ export function useVocabularyWorkspace() {
 
   async function saveCurrentFilter() {
     if (!newFilterName.trim()) return;
-    const response = await fetch("/api/filters", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    try {
+      await postJson("/api/filters", {
         name: newFilterName.trim(),
         sort,
         filters: { q, status, tag, meaning, mistakeType, entryType, collocation, due },
-      }),
-    });
-    if (!response.ok) {
+      });
+    } catch {
       setError("Failed to save filter.");
       return;
     }
@@ -136,8 +125,9 @@ export function useVocabularyWorkspace() {
   }
 
   async function removeFilter(id: string) {
-    const response = await fetch(`/api/filters?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-    if (!response.ok) {
+    try {
+      await fetchJson(`/api/filters?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch {
       setError("Failed to delete filter.");
       return;
     }
@@ -165,34 +155,29 @@ export function useVocabularyWorkspace() {
     setSavingId(id);
     setError("");
     try {
-      const response = await fetch(`/api/vocab/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          term: draft.term,
-          entryType: draft.entryType,
-          pos: draft.pos,
-          definitionEasyEn: draft.definitionEasyEn,
-          meaningFa: draft.meaningFa,
-          userExample: draft.userExample,
-          status: draft.status,
-          tags: draft.tags,
-          collocations: draft.collocations,
-          synonyms: draft.synonyms,
-          antonyms: draft.antonyms,
-          wordFamily: {
-            noun: draft.wordFamilyNoun,
-            verb: draft.wordFamilyVerb,
-            adjective: draft.wordFamilyAdjective,
-            adverb: draft.wordFamilyAdverb,
-          },
-          aiExamples: draft.aiExamples
-            .split("\n")
-            .map((line) => line.trim())
-            .filter(Boolean),
-        }),
+      await patchJson(`/api/vocab/${id}`, {
+        term: draft.term,
+        entryType: draft.entryType,
+        pos: draft.pos,
+        definitionEasyEn: draft.definitionEasyEn,
+        meaningFa: draft.meaningFa,
+        userExample: draft.userExample,
+        status: draft.status,
+        tags: draft.tags,
+        collocations: draft.collocations,
+        synonyms: draft.synonyms,
+        antonyms: draft.antonyms,
+        wordFamily: {
+          noun: draft.wordFamilyNoun,
+          verb: draft.wordFamilyVerb,
+          adjective: draft.wordFamilyAdjective,
+          adverb: draft.wordFamilyAdverb,
+        },
+        aiExamples: draft.aiExamples
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean),
       });
-      if (!response.ok) throw new Error("Save failed");
       cancelEdit();
       await fetchVocab();
     } catch {
@@ -209,8 +194,7 @@ export function useVocabularyWorkspace() {
     setDeletingId(id);
     setError("");
     try {
-      const response = await fetch(`/api/vocab/${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("Delete failed");
+      await fetchJson(`/api/vocab/${id}`, { method: "DELETE" });
       if (editingId === id) cancelEdit();
       await fetchVocab();
     } catch {
@@ -224,17 +208,11 @@ export function useVocabularyWorkspace() {
     if (!importContent.trim()) return;
     setImporting(true);
     try {
-      const response = await fetch("/api/imports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "preview",
-          source: importSource,
-          content: importContent,
-        }),
+      const data = await postJson<ImportJob>("/api/imports", {
+        action: "preview",
+        source: importSource,
+        content: importContent,
       });
-      if (!response.ok) throw new Error("Import preview failed");
-      const data = (await response.json()) as ImportJob;
       setImportPreview(data);
     } catch {
       setError("Failed to preview import.");
@@ -247,17 +225,11 @@ export function useVocabularyWorkspace() {
     if (!importContent.trim()) return;
     setImporting(true);
     try {
-      const response = await fetch("/api/imports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "execute",
-          source: importSource,
-          content: importContent,
-        }),
+      const data = await postJson<ImportJob>("/api/imports", {
+        action: "execute",
+        source: importSource,
+        content: importContent,
       });
-      if (!response.ok) throw new Error("Import execute failed");
-      const data = (await response.json()) as ImportJob;
       setImportPreview(data);
       await fetchVocab();
     } catch {

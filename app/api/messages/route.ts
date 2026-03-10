@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { getVocabularies } from "@/app/lib/vocabulary";
-import { getRequiredUserId, unauthorizedJson } from "@/app/lib/server/api-auth";
+import { withAuthorizedUser } from "@/app/lib/server/api-auth";
 
 export async function GET() {
-  const userId = await getRequiredUserId();
-  if (!userId) return unauthorizedJson();
-
-  const messages = await getVocabularies(userId);
-  return NextResponse.json(messages);
+  return withAuthorizedUser(async (userId) => {
+    const messages = await getVocabularies(userId);
+    return NextResponse.json(messages);
+  });
 }

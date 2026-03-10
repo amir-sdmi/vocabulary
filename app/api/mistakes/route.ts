@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRequiredUserId, unauthorizedJson } from "@/app/lib/server/api-auth";
+import { withAuthorizedUser } from "@/app/lib/server/api-auth";
 import { getLearningInsights } from "@/app/lib/review";
 
 const TIPS: Record<string, string> = {
@@ -11,17 +11,15 @@ const TIPS: Record<string, string> = {
 };
 
 export async function GET() {
-  const userId = await getRequiredUserId();
-  if (!userId) return unauthorizedJson();
-
-  const insights = await getLearningInsights(userId);
-  const notebook = insights.topErrors.map((item) => ({
-    type: item.type,
-    count: item.count,
-    tip: TIPS[item.type] ?? "Practice this pattern with 3 fresh examples.",
-  }));
-  return NextResponse.json({
-    notebook,
+  return withAuthorizedUser(async (userId) => {
+    const insights = await getLearningInsights(userId);
+    const notebook = insights.topErrors.map((item) => ({
+      type: item.type,
+      count: item.count,
+      tip: TIPS[item.type] ?? "Practice this pattern with 3 fresh examples.",
+    }));
+    return NextResponse.json({
+      notebook,
+    });
   });
 }
-

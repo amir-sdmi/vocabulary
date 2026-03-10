@@ -1,47 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRequiredUserId, unauthorizedJson } from "@/app/lib/server/api-auth";
+import { withAuthorizedUser } from "@/app/lib/server/api-auth";
 import { deleteFilter, listSavedFilters, saveFilter } from "@/app/lib/saved-filters";
 import { SortMode, VocabularyFilters } from "@/app/features/vocabulary/types";
+import { badRequest, notFound, parseJsonBody } from "@/app/lib/server/http";
 
 export async function GET() {
-  const userId = await getRequiredUserId();
-  if (!userId) return unauthorizedJson();
-  const filters = await listSavedFilters(userId);
-  return NextResponse.json(filters);
+  return withAuthorizedUser(async (userId) => {
+    const filters = await listSavedFilters(userId);
+    return NextResponse.json(filters);
+  });
 }
 
 export async function POST(request: NextRequest) {
-  const userId = await getRequiredUserId();
-  if (!userId) return unauthorizedJson();
+  return withAuthorizedUser(async (userId) => {
+    const parsed = await parseJsonBody<{
+      id?: string;
+      name?: string;
+      filters?: VocabularyFilters;
+      sort?: SortMode;
+    }>(request);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
+    if (!body?.name || !body.filters || !body.sort) {
+      return badRequest("Missing fields");
+    }
 
-  const body = (await request.json().catch(() => null)) as
-    | {
-        id?: string;
-        name?: string;
-        filters?: VocabularyFilters;
-        sort?: SortMode;
-      }
-    | null;
-  if (!body?.name || !body.filters || !body.sort) {
-    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-  }
-
-  const saved = await saveFilter({
-    userId,
-    id: body.id,
-    name: body.name,
-    filters: body.filters,
-    sort: body.sort,
+    const saved = await saveFilter({
+      userId,
+      id: body.id,
+      name: body.name,
+      filters: body.filters,
+      sort: body.sort,
+    });
+    return NextResponse.json(saved, { status: 201 });
   });
-  return NextResponse.json(saved, { status: 201 });
 }
 
 export async function DELETE(request: NextRequest) {
-  const userId = await getRequiredUserId();
-  if (!userId) return unauthorizedJson();
-  const id = new URL(request.url).searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-  const removed = await deleteFilter(userId, id);
-  if (!removed) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json({ ok: true });
+  return withAuthorizedUser(async (userId) => {
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id) return badRequest("Missing id");
+    const removed = await deleteFilter(userId, id);
+    if (!removed) return notFound();
+    return NextResponse.json({ ok: true });
+  });
 }

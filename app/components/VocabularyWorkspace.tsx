@@ -3,6 +3,7 @@
 import { AddVocabularyForm } from "@/app/components/vocabulary/AddVocabularyForm";
 import { CoachPanel } from "@/app/components/vocabulary/CoachPanel";
 import { InsightsPanel } from "@/app/components/vocabulary/InsightsPanel";
+import { MemoryGraphPanel } from "@/app/components/vocabulary/MemoryGraphPanel";
 import { VocabularyItemCard } from "@/app/components/vocabulary/VocabularyItemCard";
 import { VocabularyStats } from "@/app/components/vocabulary/VocabularyStats";
 import { VocabularyToolbar } from "@/app/components/vocabulary/VocabularyToolbar";
@@ -16,6 +17,7 @@ export function VocabularyWorkspace() {
     <div className="space-y-6">
       <CoachPanel />
       <InsightsPanel />
+      <MemoryGraphPanel />
 
       <AddVocabularyForm
         term={vm.term}

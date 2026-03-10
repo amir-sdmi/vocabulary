@@ -3,6 +3,7 @@ import { saveTelegramExtractedEntry } from "@/app/lib/vocabulary";
 import { getTelegramUserId } from "@/app/lib/auth-user";
 import { consumeLinkCode, resolveTelegramOwnerUserId } from "@/app/lib/account-link";
 import { extractTelegramEntry } from "@/app/lib/telegram-intake";
+import { parseJsonBody } from "@/app/lib/server/http";
 
 const TELEGRAM_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -37,14 +38,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const update = body as {
+  const parsed = await parseJsonBody<{
     message?: {
       text?: string;
       voice?: unknown;
@@ -52,7 +46,10 @@ export async function POST(request: NextRequest) {
       from?: { id?: number | string };
       chat?: { id?: number | string };
     };
-  };
+  }>(request);
+  if (!parsed.ok) return parsed.response;
+
+  const update = parsed.data;
   const media = await handleMediaIngestionStub(update);
   if (media.accepted) {
     const chatId = update.message?.chat?.id;

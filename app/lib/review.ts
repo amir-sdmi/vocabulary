@@ -8,6 +8,7 @@ import {
 } from "@/app/features/vocabulary/types";
 import { inferTaskTypesForMode } from "@/app/features/vocabulary/helpers";
 import { registerCorrectProduction } from "@/app/lib/goals";
+import { buildMemoryGraph } from "@/app/lib/memory-graph";
 import { addPracticeAttempt, getPracticeAttempts } from "@/app/lib/practice";
 import { getVocabularies, updateVocabulary } from "@/app/lib/vocabulary";
 
@@ -18,18 +19,32 @@ export async function buildReviewQueue(input: {
 }): Promise<ReviewQueueItem[]> {
   const list = await getVocabularies(input.userId);
   const now = Date.now();
+  let focusTerms = new Set<string>();
+  if (input.mode === "weak_area" || input.mode === "use_today") {
+    try {
+      const graph = await buildMemoryGraph(input.userId);
+      for (const rec of graph.recommendations) {
+        for (const term of rec.focusTerms) focusTerms.add(term.toLowerCase());
+      }
+    } catch {
+      focusTerms = new Set<string>();
+    }
+  }
 
   const filtered = list.filter((item) => {
     if (input.mode === "trouble") return item.status === "trouble" || item.lapses >= 2;
     if (input.mode === "tag") return !!input.tag && item.tags.includes(input.tag.toLowerCase());
     if (input.mode === "collocation") return item.collocations.length > 0;
     if (input.mode === "weak_area") {
-      return item.errorBuckets.grammar > 0 || item.errorBuckets.collocation > 0 || item.errorBuckets.fluency > 0;
+      const byError =
+        item.errorBuckets.grammar > 0 || item.errorBuckets.collocation > 0 || item.errorBuckets.fluency > 0;
+      const byGraph = focusTerms.has(item.term.toLowerCase());
+      return byError || byGraph;
     }
     if (input.mode === "use_today") {
       const now = Date.now();
       const dayAgo = now - 24 * 60 * 60 * 1000;
-      return (item.lastUsedAt ?? 0) < dayAgo && item.status !== "new";
+      return ((item.lastUsedAt ?? 0) < dayAgo && item.status !== "new") || focusTerms.has(item.term.toLowerCase());
     }
     return true;
   });
