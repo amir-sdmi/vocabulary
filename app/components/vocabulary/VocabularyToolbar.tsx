@@ -19,6 +19,10 @@ type Props = {
 };
 
 export function VocabularyToolbar(props: Props) {
+  function openExport(format: "csv" | "json" | "anki" | "weekly") {
+    window.location.assign(`/api/vocab/export?format=${format}`);
+  }
+
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
@@ -62,30 +66,34 @@ export function VocabularyToolbar(props: Props) {
         >
           Reset
         </button>
-        <a
-          href="/api/vocab/export?format=csv"
+        <button
+          type="button"
+          onClick={() => openExport("csv")}
           className="rounded-lg border border-emerald-900/20 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100"
         >
           Export CSV
-        </a>
-        <a
-          href="/api/vocab/export?format=json"
+        </button>
+        <button
+          type="button"
+          onClick={() => openExport("json")}
           className="rounded-lg border border-emerald-900/20 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100"
         >
           Export JSON
-        </a>
-        <a
-          href="/api/vocab/export?format=anki"
+        </button>
+        <button
+          type="button"
+          onClick={() => openExport("anki")}
           className="rounded-lg border border-emerald-900/20 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100"
         >
           Export Anki
-        </a>
-        <a
-          href="/api/vocab/export?format=weekly"
+        </button>
+        <button
+          type="button"
+          onClick={() => openExport("weekly")}
           className="rounded-lg border border-emerald-900/20 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-100"
         >
           Weekly Report
-        </a>
+        </button>
       </div>
 
       <p className="mt-2 text-xs text-emerald-900/70">{props.total} words found</p>

@@ -57,14 +57,15 @@ export function CoachPanel() {
     const data = (await response.json()) as {
       attempt?: { score: number; feedback: string; fixedAnswer: string };
     };
+    const attempt = data.attempt;
 
-    if (data.attempt) {
+    if (attempt) {
       setSessionScores((currentScores) => [
         ...currentScores,
-        { term: item.vocab.term, score: data.attempt.score },
+        { term: item.vocab.term, score: attempt.score },
       ]);
       setFeedback(
-        `Score ${data.attempt.score}/100. ${data.attempt.feedback} Fix: ${data.attempt.fixedAnswer}`,
+        `Score ${attempt.score}/100. ${attempt.feedback} Fix: ${attempt.fixedAnswer}`,
       );
     }
     setAnswer("");
@@ -78,7 +79,7 @@ export function CoachPanel() {
       setTaskIndex(0);
       return;
     }
-    const all = [...sessionScores, ...(data.attempt ? [{ term: item.vocab.term, score: data.attempt.score }] : [])];
+    const all = [...sessionScores, ...(attempt ? [{ term: item.vocab.term, score: attempt.score }] : [])];
     const avg = all.length > 0 ? Math.round(all.reduce((s, x) => s + x.score, 0) / all.length) : 0;
     const trouble = all.filter((x) => x.score < 70).map((x) => x.term);
     setFeedback(
